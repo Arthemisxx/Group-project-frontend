@@ -31,6 +31,9 @@
   .logo {
     animation: logo-spin infinite 20s linear;
   }
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 .card {
