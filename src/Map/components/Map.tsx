@@ -5,13 +5,13 @@ import 'leaflet-geosearch/dist/geosearch.css';
 import {useMap} from 'react-leaflet'
 import {OpenStreetMapProvider, GeoSearchControl} from 'leaflet-geosearch'
 import {useEffect, useState} from "react";
-import type Spot from "./Spot.ts";
+import type Spot from "../Spot.ts";
 //import {fetchSpotsData} from "./api.ts";
-import testSpots from './testSpots.json'
+import testSpots from '../testSpots.json'
 
 
 interface SearchProps {
-    provider: OpenStreetMapProvider; // Możesz doprecyzować jeśli dodasz typy z biblioteki
+    provider: OpenStreetMapProvider;
 }
 
 const Search = ({ provider }: SearchProps) => {
