@@ -5,3 +5,27 @@
     position: relative;
 }
 
+.user-localization{
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    padding: 0;
+    z-index: 1000;
+    border: none 0 white;
+}
+
+.user-localization img {
+    width: 40px;
+}
+
+.user-localization:hover{
+    opacity: 0.8;
+    cursor: pointer;
+    border: none 0 white;
+}
+
+.user-localization:focus,
+.user-localization:focus-visible {
+    outline: none;
+}
+

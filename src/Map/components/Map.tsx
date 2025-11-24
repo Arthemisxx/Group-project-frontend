@@ -1,20 +1,19 @@
-import {MapContainer, Marker, Popup, TileLayer} from "react-leaflet";
+import {MapContainer, Marker, TileLayer} from "react-leaflet";
 import "./Map.css";
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-geosearch/dist/geosearch.css';
 import {useMap} from 'react-leaflet'
 import {OpenStreetMapProvider, GeoSearchControl} from 'leaflet-geosearch'
 import {useEffect, useState} from "react";
-import type Spot from "../Spot.ts";
-//import {fetchSpotsData} from "./api.ts";
-import testSpots from '../testSpots.json'
+import type {Spot} from "../../Utils/Spot.ts";
+import {fetchSpotsData} from "../../Utils/api.ts";
 
 
 interface SearchProps {
     provider: OpenStreetMapProvider;
 }
 
-const Search = ({ provider }: SearchProps) => {
+const Search = ({provider}: SearchProps) => {
     const map = useMap();
 
     useEffect((): () => void => {
@@ -38,46 +37,95 @@ const Search = ({ provider }: SearchProps) => {
 
     }, [map, provider])
 
+    return null
+};
 
-
-    return null // don't want anything to show up from this comp
-}
-
-
-
-export const Map = () => {
-    const [spots, setSpots] = useState<null | Spot[]>()
+// @ts-ignore
+const MapController = ({onMapReady}) => {
+    const map = useMap();
 
     useEffect(() => {
-        const init = async() => {
-            // const response: Spot[] = await fetchSpotsData();
-            // const response = testSpots;
-            // setSpots(response as Spot[]);
+        onMapReady(map);
+    }, [map]);
 
-            setSpots(testSpots as Spot[]);
+    return null;
+};
 
 
+interface MapProps {
+    sendDataToMapView: (spot: Spot | null) => void
+}
+
+export const Map = ({sendDataToMapView}: MapProps) => {
+    const [spots, setSpots] = useState<null | Spot[]>()
+    const [userLocation, setUserLocation] = useState<[number, number]>([52.237049, 21.017532]);
+    const [mapInstance, setMapInstance] = useState(null);
+    const [currentSpot, setCurrentSpot] = useState<Spot | null>(null)
+
+
+    useEffect(() => {
+            sendDataToMapView(currentSpot);
+   
+    }, [currentSpot, sendDataToMapView]);
+    
+    useEffect(() => {
+        const init = async () => {
+            let response: Spot[] = [];
+            response = await fetchSpotsData(-90, 90, -180, 180);
+            setSpots(response as Spot[]);
         }
         init();
-    }, [spots]);
+    }, []);
+
+    const findUser = () => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition((position) => {
+                    const {latitude, longitude} = position.coords;
+                    setUserLocation([latitude, longitude]);
+
+                }, (error) => {
+                    console.error('Error getting user location:', error);
+                }
+            );
+        }
+    }
+
+
+    const findUserLocation = () => {
+        if (!mapInstance) return;
+
+        findUser();
+
+        // @ts-ignore
+        mapInstance.flyTo(userLocation, 14);
+    };
+
 
     return (
         <>
             <div className={"map-wrapper"}>
-                <MapContainer center={[51.505, -0.09]} zoom={14} scrollWheelZoom={true}
+                <button className={"user-localization"} onClick={findUserLocation}><img src="public/my-location.svg"
+                                                                                 alt="My location"/></button>
+                <MapContainer center={userLocation} zoom={7} scrollWheelZoom={true}
                               style={{height: '100%', width: '100%'}}>
                     <TileLayer
                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                         url={"https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"}
                     />
+                    <MapController onMapReady={setMapInstance}/>
                     {spots?.map(spot => (
                         <Marker key={spot.id}
-                                position={[spot.latitude, spot.longitude]}>
-                            <Popup>
-                                <strong>{spot.title}</strong>
-                                <br />
-                                {spot.description}
-                            </Popup>
+                                position={[spot.latitude, spot.longitude]} eventHandlers={{
+                            click: () => {
+                                setCurrentSpot(spot);
+                                console.log(spot)
+                            }
+                        }} >
+                            {/*<Popup>*/}
+                            {/*    <strong>{spot.title}</strong>*/}
+                            {/*    <br/>*/}
+                            {/*    {spot.description}*/}
+                            {/*</Popup>*/}
 
                         </Marker>
                     ))}

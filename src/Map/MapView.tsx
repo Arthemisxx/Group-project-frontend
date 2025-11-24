@@ -1,40 +1,64 @@
 import './MapView.css';
 import {Map} from "./components/Map.tsx"
 import {GoogleButton} from "./components/GoogleButton.tsx";
+import {useState} from "react";
+import type {Spot} from "../Utils/Spot.ts";
 
 export const MapView = () =>  {
+    const [currentSpot, setCurrentSpot] = useState<Spot | null>(null)
+
+    function handleDataFromMap(spot: Spot | null){
+        setCurrentSpot(spot)
+    }
+
+
+
     return (
+
         <div className={"map-view-wrapper"}>
+
+
             <div className={"info-view"}>
-                <div className={"photos-info-wrapper"}>
-                    <div className={"photo-wrapper"}>
+                {currentSpot? (
+                    <>
+                        <div className={"photos-info-wrapper"}>
+                            <div className={"photo-wrapper"}>
 
-                        <img src="/photo1.jpg" alt="" className={"spot-photo"}/>
-                    </div>
-                    <div className={"photo-info-wrapper"}>
-                        <p className={"tags"}>#krajobraz #windows #hasztag</p>
+                                <img src="/photo1.jpg" alt="" className={"spot-photo"}/>
+                            </div>
+                            <div className={"photo-info-wrapper"}>
+                                <p className={"tags"}>#krajobraz #windows #hasztag</p>
 
-                    </div>
+                            </div>
 
-                </div>
-                <div className={"spot-info-wrapper"}>
-                    <p className={"spot-name"}>Górskie jezioro</p>
-                    <p className={"label"}>Opis</p>
-                    <p className={"descr"}>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam sagittis eget tortor a cursus. Maecenas porttitor, leo cursus vestibulum fringilla, ex nisi tincidunt lacus, eget finibus felis</p>
-
-
-
-                </div>
-                <GoogleButton lat={"49.2827"} long={"19.9450"}/>
+                        </div>
+                        <div className={"spot-info-wrapper"}>
+                            <p className={"spot-name"}>{currentSpot?.title}</p>
+                            <p className={"label"}>Opis</p>
+                            <p className={"descr"}>{currentSpot?.description}</p>
 
 
-            </div>
+                        </div>
+                        <GoogleButton lat={currentSpot?.latitude} long={currentSpot?.longitude}/></>
 
-            <div className={"map-view"}>
-                <Map/>
-            </div>
+            ): (
+                <>
+                    <div><h1>TODO</h1></div>
+
+
+
+                </>
+            )}
 
 
         </div>
-    );
+
+    <div className={"map-view"}>
+        <Map sendDataToMapView={handleDataFromMap}/>
+    </div>
+
+
+</div>
+)
+    ;
 }
