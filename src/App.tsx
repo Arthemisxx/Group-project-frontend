@@ -1,22 +1,22 @@
 import './App.css'
-import {Body} from "./Body/Body.tsx";
-import {Map} from "./Map/Map.tsx"
 import Header from "./Header/Header";
 import Home from "./Home/Home.tsx";
 import Odkrywaj from "./Odkrywaj/Odkrywaj.tsx";
+import {BrowserRouter, Route, Routes} from "react-router-dom";
+import {MapView} from "./Map/MapView.tsx";
 
 function App() {
 
   return (
     <>
-      <Router>
+      <BrowserRouter>
       <Header />
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/mapa" element={<Map />} />
+        <Route path="/mapa" element={<MapView />} />
         <Route path="/odkrywaj" element={<Odkrywaj />} />
       </Routes>
-      </Router>
+      </BrowserRouter>
 
     </>
   )
