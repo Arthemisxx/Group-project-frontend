@@ -1,0 +1,82 @@
+.map-view-wrapper {
+    flex: 1;
+    display: flex;
+    height: calc(100vh - 74px);
+    position: relative;
+    padding-top: 74px;
+}
+
+.map-view {
+    width: 80%;
+    height: 100%;
+    display: flex;
+
+
+}
+
+.info-view {
+    width: 20%;
+    height: calc(100% - 20px);
+    background-color: white;
+    padding-top: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 350px;
+
+
+}
+
+.photos-info-wrapper {
+    height: 45%;
+    width: 90%;
+    background-color: #eaeaea;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.spot-info-wrapper {
+    width: 90%;
+    height: calc(55% - 70px);
+    display: flex;
+    flex-direction: column;
+
+}
+
+.photo-wrapper {
+    height: 80%;
+}
+
+.photo-info-wrapper {
+    width: 90%;
+    height: 100%;
+}
+
+.spot-photo {
+    max-height: 100%;
+    max-width: 100%;
+    object-fit: contain;
+}
+
+.tags {
+    font-size: 14px;
+    font-weight: bold;
+    color: #888888;
+}
+
+.spot-name{
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.label{
+    padding: 0;
+    margin: 0;
+    color: #888888;
+}
+
+.descr {
+    text-align: justify;
+}
+

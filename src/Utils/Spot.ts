@@ -1,29 +1,30 @@
-export default interface Spot{
+export interface Spot {
     id: number;
     title: string;
     description?: string;
     latitude: number;
     longitude: number;
     createdAt: string;
-    category: Category;
+    categoryId: Category;
     author: User;
     address?: Address;
 
 }
 
-interface Category{
+interface Category {
     id: number;
     name: string;
 }
 
-interface User {
+export interface User {
     name: string;
 
 }
 
-interface Address {
+export interface Address {
     name: string;
     country: string;
     region: string;
 
 }
+
