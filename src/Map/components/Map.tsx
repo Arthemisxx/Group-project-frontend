@@ -6,7 +6,8 @@ import {useMap} from 'react-leaflet'
 import {OpenStreetMapProvider, GeoSearchControl} from 'leaflet-geosearch'
 import {useEffect, useState} from "react";
 import type {Spot} from "../../Utils/Spot.ts";
-import {fetchSpotsData} from "../../Utils/api.ts";
+import type {Photo} from "../../Utils/Photo.ts";
+import {fetchSpotPhotos, fetchSpotsData} from "../../Utils/api.ts";
 
 
 interface SearchProps {
@@ -53,35 +54,51 @@ const MapController = ({onMapReady}) => {
 
 
 interface MapProps {
-    sendDataToMapView: (spot: Spot | null) => void
+    sendSpotDataToMapView: (spot: Spot | null) => void;
+    sendPhotosDataToMapView: (photos: Photo[] | null) => void
 }
 
-export const Map = ({sendDataToMapView}: MapProps) => {
+export const Map = ({sendSpotDataToMapView, sendPhotosDataToMapView}: MapProps) => {
     const [spots, setSpots] = useState<null | Spot[]>()
-    const [userLocation, setUserLocation] = useState<[number, number]>([52.237049, 21.017532]);
+    const [photos, setPhotos] = useState<null | Photo[]>(null)
+    const [userLocation, setUserLocation] = useState<[number, number]>([51.777024, 19.486368]);
     const [mapInstance, setMapInstance] = useState(null);
     const [currentSpot, setCurrentSpot] = useState<Spot | null>(null)
 
 
     useEffect(() => {
-            sendDataToMapView(currentSpot);
+            sendSpotDataToMapView(currentSpot);
    
-    }, [currentSpot, sendDataToMapView]);
+    }, [currentSpot, sendSpotDataToMapView]);
+
+    useEffect(() => {
+        sendPhotosDataToMapView(photos)
+
+    }, [photos, sendPhotosDataToMapView]);
     
     useEffect(() => {
         const init = async () => {
             let response: Spot[] = [];
             response = await fetchSpotsData(-90, 90, -180, 180);
             setSpots(response as Spot[]);
+
         }
         init();
     }, []);
+
+    const getPhotos = async (id :number) => {
+        let response: Photo[] = [];
+        response = await fetchSpotPhotos(id);
+        setPhotos(response as Photo[])
+        photos?.map(p => {
+            console.log(p)})
+    }
 
     const findUser = () => {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition((position) => {
                     const {latitude, longitude} = position.coords;
-                    setUserLocation([latitude, longitude]);
+                setUserLocation([latitude, longitude]);
 
                 }, (error) => {
                     console.error('Error getting user location:', error);
@@ -95,6 +112,8 @@ export const Map = ({sendDataToMapView}: MapProps) => {
         if (!mapInstance) return;
 
         findUser();
+        findUser();
+        console.log(userLocation)
 
         // @ts-ignore
         mapInstance.flyTo(userLocation, 14);
@@ -118,6 +137,9 @@ export const Map = ({sendDataToMapView}: MapProps) => {
                                 position={[spot.latitude, spot.longitude]} eventHandlers={{
                             click: () => {
                                 setCurrentSpot(spot);
+                                if(currentSpot) {
+                                    getPhotos(spot.id);
+                                }
                                 console.log(spot)
                             }
                         }} >

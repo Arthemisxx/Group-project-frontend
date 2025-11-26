@@ -3,12 +3,20 @@ import {Map} from "./components/Map.tsx"
 import {GoogleButton} from "./components/GoogleButton.tsx";
 import {useState} from "react";
 import type {Spot} from "../Utils/Spot.ts";
+import type {Photo} from "../Utils/Photo.ts";
 
 export const MapView = () =>  {
     const [currentSpot, setCurrentSpot] = useState<Spot | null>(null)
+    const [currentSpotPhotos, setCurrentSpotPhotos] = useState<null | Photo[]>([])
 
-    function handleDataFromMap(spot: Spot | null){
+    function handleSpotDataFromMap(spot: Spot | null){
         setCurrentSpot(spot)
+    }
+
+    function handlePhotosDataFromMap(photos: Photo[] | null){
+        setCurrentSpotPhotos(photos)
+        photos?.map(p => {
+            console.log(p)})
     }
 
 
@@ -22,14 +30,20 @@ export const MapView = () =>  {
                 {currentSpot? (
                     <>
                         <div className={"photos-info-wrapper"}>
-                            <div className={"photo-wrapper"}>
+                            {/*{currentSpotPhotos?.map(photo => (*/}
+                                <>
+                                    <div className={"photo-wrapper"}>
 
-                                <img src="/photo1.jpg" alt="" className={"spot-photo"}/>
-                            </div>
-                            <div className={"photo-info-wrapper"}>
-                                <p className={"tags"}>#krajobraz #windows #hasztag</p>
+                                        <img src="/photo1.jpg" alt="" className={"spot-photo"}/>
+                                    </div>
+                                    <div className={"photo-info-wrapper"}>
+                                        <p className={"tags"}>#krajobraz #windows #hasztag</p>
 
-                            </div>
+                                    </div>
+                                </>
+
+                             {/*))}*/}
+
 
                         </div>
                         <div className={"spot-info-wrapper"}>
@@ -54,7 +68,7 @@ export const MapView = () =>  {
         </div>
 
     <div className={"map-view"}>
-        <Map sendDataToMapView={handleDataFromMap}/>
+        <Map sendSpotDataToMapView={handleSpotDataFromMap} sendPhotosDataToMapView={handlePhotosDataFromMap}/>
     </div>
 
 
