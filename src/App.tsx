@@ -2,6 +2,7 @@ import './App.css'
 import {Body} from "./Body/Body.tsx";
 import {Map} from "./Map/Map.tsx"
 import Header from "./Header/Header";
+import {Explore} from "./Explore/Explore";
 
 function App() {
 
@@ -11,6 +12,7 @@ function App() {
       <Body/>
       <Map/>
       <Header />
+        <Explore />
 
     </>
   )
