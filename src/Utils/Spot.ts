@@ -6,7 +6,7 @@ export interface Spot {
     longitude: number;
     createdAt: string;
     categoryId: Category;
-    author: User;
+    author: Author;
     address?: Address;
 
 }
@@ -16,8 +16,11 @@ interface Category {
     name: string;
 }
 
-export interface User {
-    name: string;
+export interface Author {
+    id: number;
+    displayName: string;
+    avatarUrl: string;
+    bio: string;
 
 }
 

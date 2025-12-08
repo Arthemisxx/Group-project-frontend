@@ -4,75 +4,110 @@ import {GoogleButton} from "./components/GoogleButton.tsx";
 import {useState} from "react";
 import type {Spot} from "../Utils/Spot.ts";
 import type {Photo} from "../Utils/Photo.ts";
+import Slider from "react-slick";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
+import { FaRegUser } from "react-icons/fa";
+import {SpotModal} from "./components/SpotModal.tsx";
 
-export const MapView = () =>  {
+export const MapView = () => {
     const [currentSpot, setCurrentSpot] = useState<Spot | null>(null)
-    const [currentSpotPhotos, setCurrentSpotPhotos] = useState<null | Photo[]>([])
+    const [currentSpotPhotos, setCurrentSpotPhotos] = useState<Photo[]>([])
+    const [showModal, setShowModal] = useState<boolean>(false);
+    const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
 
-    function handleSpotDataFromMap(spot: Spot | null){
+    function handleSpotDataFromMap(spot: Spot | null) {
         setCurrentSpot(spot)
     }
 
-    function handlePhotosDataFromMap(photos: Photo[] | null){
-        setCurrentSpotPhotos(photos)
+    function handlePhotosDataFromMap(photos: Photo[]) {
+        setCurrentSpotPhotos(photos ?? [])
         photos?.map(p => {
-            console.log(p)})
+            console.log(p)
+        })
     }
 
+    const sliderSettings = {
+        dots: false,
+        infinite: true,
+        speed: 500,
+        slidesToShow: 1,
+        slidesToScroll: 1,
+        lazyLoad: 'ondemand' as const,
+        adaptiveHeight: true,
+    }
+
+    function getPhotoUrl(url: string): string {
+        if(url.includes("drive.google.com")){
+            const id = url.substring(url.indexOf("/d/")+3, url.indexOf("/view?"));
+            console.log(id);
+            return`https://drive.google.com/thumbnail?id=${id}`;
+        }else{
+            return url;
+        }
+    }
 
 
     return (
 
         <div className={"map-view-wrapper"}>
-
-
-            <div className={"info-view"}>
-                {currentSpot? (
+            <div className={`info-view ${currentSpot ? "open" : "closed"}`}>
+                {currentSpot && (
                     <>
-                        <div className={"photos-info-wrapper"}>
-                            {/*{currentSpotPhotos?.map(photo => (*/}
-                                <>
-                                    <div className={"photo-wrapper"}>
+                        <div className={"photos-info-wrapper"} >
+                            <div className={"slider-container"}>
+                                {currentSpotPhotos.length > 0 ? (
+                                    <Slider {...sliderSettings}>
+                                        {currentSpotPhotos?.map(photo => (
+                                            <div className={"current-photo-wrapper"}>
+                                                <div className={"photo-wrapper"}>
+                                                    <img src={getPhotoUrl(photo.url)} alt="" className={"spot-photo"} onClick={() => {
+                                                        setSelectedPhoto(photo)
+                                                        setShowModal(true)
+                                                    }}/>
+                                                    <div className={"photo-info-wrapper"}>
+                                                        <p className={"caption"}>{photo.caption}</p>
+                                                        {/*<p className={"author"}>{photo.author.displayName}</p>*/}
+                                                        <p className={"author"}> <FaRegUser /> Julia Staniszewska</p>
+                                                    </div>
 
-                                        <img src="/photo1.jpg" alt="" className={"spot-photo"}/>
+                                                </div>
+
+                                            </div>
+                                        ))}
+                                    </Slider>
+                                ) : (
+                                    <div className="no-photos">
+                                    <h2>Nikt jeszcze nie dodał zdjęcia</h2>
+                                        <p>Chcesz być pierwszy?</p>
+                                        <button className="btn-login">Zaloguj Się</button>
                                     </div>
-                                    <div className={"photo-info-wrapper"}>
-                                        <p className={"tags"}>#krajobraz #windows #hasztag</p>
-
-                                    </div>
-                                </>
-
-                             {/*))}*/}
-
-
+                                )}
+                            </div>
                         </div>
+
                         <div className={"spot-info-wrapper"}>
                             <p className={"spot-name"}>{currentSpot?.title}</p>
                             <p className={"label"}>Opis</p>
                             <p className={"descr"}>{currentSpot?.description}</p>
-
-
                         </div>
-                        <GoogleButton lat={currentSpot?.latitude} long={currentSpot?.longitude}/></>
 
-            ): (
-                <>
-                    <div><h1>TODO</h1></div>
+                        <GoogleButton lat={currentSpot?.latitude} long={currentSpot?.longitude}/>
+                    </>
 
 
+                )}
 
-                </>
-            )}
+            </div>
+            <div className={`map-view ${currentSpot ? "with-spot" : "no-spot"}`}>
+                <Map sendSpotDataToMapView={handleSpotDataFromMap} sendPhotosDataToMapView={handlePhotosDataFromMap}/>
+            </div>
+
+            {selectedPhoto && currentSpot &&
+                <SpotModal open={showModal} onClose={() => setShowModal(false)} photo={selectedPhoto} spot={currentSpot}/>
+            }
 
 
         </div>
-
-    <div className={"map-view"}>
-        <Map sendSpotDataToMapView={handleSpotDataFromMap} sendPhotosDataToMapView={handlePhotosDataFromMap}/>
-    </div>
-
-
-</div>
-)
-    ;
+    );
 }

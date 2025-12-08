@@ -1,4 +1,4 @@
-import type {Spot, User} from "./Spot.ts";
+import type {Spot, Author} from "./Spot.ts";
 
 export interface Photo {
     id: number;
@@ -6,6 +6,6 @@ export interface Photo {
     thumbnail_url?: string;
     caption?: string;
     createdAt: string;
-    author: User;
+    author: Author;
     spot: Spot;
 }

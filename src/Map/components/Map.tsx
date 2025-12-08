@@ -55,12 +55,12 @@ const MapController = ({onMapReady}) => {
 
 interface MapProps {
     sendSpotDataToMapView: (spot: Spot | null) => void;
-    sendPhotosDataToMapView: (photos: Photo[] | null) => void
+    sendPhotosDataToMapView: (photos: Photo[]) => void
 }
 
 export const Map = ({sendSpotDataToMapView, sendPhotosDataToMapView}: MapProps) => {
     const [spots, setSpots] = useState<null | Spot[]>()
-    const [photos, setPhotos] = useState<null | Photo[]>(null)
+    const [photos, setPhotos] = useState<Photo[]>([])
     const [userLocation, setUserLocation] = useState<[number, number]>([51.777024, 19.486368]);
     const [mapInstance, setMapInstance] = useState(null);
     const [currentSpot, setCurrentSpot] = useState<Spot | null>(null)
@@ -90,8 +90,6 @@ export const Map = ({sendSpotDataToMapView, sendPhotosDataToMapView}: MapProps) 
         let response: Photo[] = [];
         response = await fetchSpotPhotos(id);
         setPhotos(response as Photo[])
-        photos?.map(p => {
-            console.log(p)})
     }
 
     const findUser = () => {
@@ -137,17 +135,9 @@ export const Map = ({sendSpotDataToMapView, sendPhotosDataToMapView}: MapProps) 
                                 position={[spot.latitude, spot.longitude]} eventHandlers={{
                             click: () => {
                                 setCurrentSpot(spot);
-                                if(currentSpot) {
-                                    getPhotos(spot.id);
-                                }
-                                console.log(spot)
+                                getPhotos(spot.id);
                             }
                         }} >
-                            {/*<Popup>*/}
-                            {/*    <strong>{spot.title}</strong>*/}
-                            {/*    <br/>*/}
-                            {/*    {spot.description}*/}
-                            {/*</Popup>*/}
 
                         </Marker>
                     ))}
