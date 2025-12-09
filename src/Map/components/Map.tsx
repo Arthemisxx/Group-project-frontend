@@ -7,7 +7,8 @@ import {OpenStreetMapProvider, GeoSearchControl} from 'leaflet-geosearch'
 import {useEffect, useState} from "react";
 import type {Spot} from "../../Utils/Spot.ts";
 import type {Photo} from "../../Utils/Photo.ts";
-import {fetchSpotPhotos, fetchSpotsData} from "../../Utils/api.ts";
+import {fetchComments, fetchSpotPhotos, fetchSpotsData} from "../../Utils/api.ts";
+import type {Comment} from "../../Utils/Comment.ts";
 
 
 interface SearchProps {
@@ -56,15 +57,16 @@ const MapController = ({onMapReady}) => {
 interface MapProps {
     sendSpotDataToMapView: (spot: Spot | null) => void;
     sendPhotosDataToMapView: (photos: Photo[]) => void
+    sendCommentsDataToMapView: (comments: Comment[]) => void
 }
 
-export const Map = ({sendSpotDataToMapView, sendPhotosDataToMapView}: MapProps) => {
+export const Map = ({sendSpotDataToMapView, sendPhotosDataToMapView, sendCommentsDataToMapView}: MapProps) => {
     const [spots, setSpots] = useState<null | Spot[]>()
     const [photos, setPhotos] = useState<Photo[]>([])
     const [userLocation, setUserLocation] = useState<[number, number]>([51.777024, 19.486368]);
     const [mapInstance, setMapInstance] = useState(null);
     const [currentSpot, setCurrentSpot] = useState<Spot | null>(null)
-
+    const [currentSpotComments, setCurrentSpotComments] = useState<Comment[]>([])
 
     useEffect(() => {
             sendSpotDataToMapView(currentSpot);
@@ -75,6 +77,11 @@ export const Map = ({sendSpotDataToMapView, sendPhotosDataToMapView}: MapProps) 
         sendPhotosDataToMapView(photos)
 
     }, [photos, sendPhotosDataToMapView]);
+
+    useEffect(() => {
+        sendCommentsDataToMapView(currentSpotComments)
+
+    }, [currentSpotComments, sendCommentsDataToMapView]);
     
     useEffect(() => {
         const init = async () => {
@@ -90,6 +97,12 @@ export const Map = ({sendSpotDataToMapView, sendPhotosDataToMapView}: MapProps) 
         let response: Photo[] = [];
         response = await fetchSpotPhotos(id);
         setPhotos(response as Photo[])
+    }
+
+    const getComments = async (id:number)=> {
+        let response: Comment[] = [];
+        response = await fetchComments(id);
+        setCurrentSpotComments(response as Comment[])
     }
 
     const findUser = () => {
@@ -136,6 +149,7 @@ export const Map = ({sendSpotDataToMapView, sendPhotosDataToMapView}: MapProps) 
                             click: () => {
                                 setCurrentSpot(spot);
                                 getPhotos(spot.id);
+                                getComments(spot.id);
                             }
                         }} >
 

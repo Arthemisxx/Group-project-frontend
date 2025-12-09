@@ -1,42 +1,54 @@
+/* ==========================================================================
+   GŁÓWNY WRAPPER WIDOKU MAPY
+   ========================================================================== */
 
 .map-view-wrapper {
     flex: 1;
     display: flex;
-    height: calc(100vh - 74px);
+    height: calc(100vh - 74px);   /* mapa + panel zajmują całą wysokość */
     position: relative;
-    /*padding-top: 74px;*/
 }
-
 
 .map-view {
     width: 80%;
     height: 100%;
     display: flex;
-    transition: width 0.6s ease, opacity 0.6s ease, width 0.6s ease;
+    transition: width 0.6s ease, opacity 0.6s ease;
 }
 
 .no-spot {
     width: 100%;
 }
 
+
+/* ==========================================================================
+   PANEL INFORMACYJNY O SPOTCIE
+   ========================================================================== */
+
 .info-view {
     height: calc(100% - 20px);
     background-color: white;
+    box-shadow: 4px 0 16px rgba(0, 0, 0, 0.25);
+
     padding-top: 20px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    overflow: hidden;
+
+    overflow: hidden;      /* blokuje przewijanie całej strony */
+    position: relative;    /* konieczne dla przycisku zamknięcia */
 
     transition: transform 0.6s ease, opacity 0.6s ease, width 0.6s ease;
 }
 
+/* stan otwarty */
 .info-view.open {
-    width: max(20%, 350px);
+    width: max(26%, 380px);
     transform: translateX(0);
     opacity: 1;
 }
 
+/* stan zamknięty */
 .info-view.closed {
     transform: translateX(-100%);
     opacity: 0;
@@ -51,38 +63,60 @@
 }
 
 
+
+/* ==========================================================================
+   SEKCJA ZDJĘĆ I SLICK SLIDER
+   ========================================================================== */
+
 .photos-info-wrapper {
-    height: 45%;
+    height: 40%;
     width: 90%;
-    /*background-color: #eaeaea;*/
     overflow: hidden;
     position: relative;
     cursor: pointer;
-
 }
 
+/*.photos-info-wrapper {*/
+/*    width: 90%;*/
+/*    max-height: 280px;*/
+/*    height: auto;*/
+/*    margin-bottom: 20px;*/
+/*    border-radius: 12px;*/
+/*    overflow: hidden;*/
+/*    box-shadow: 0 4px 12px rgba(0,0,0,0.12);*/
+/*}*/
+
 .current-photo-wrapper {
-    /*height: 100%;*/
     display: flex !important;
     flex-direction: column;
     justify-content: center;
 }
 
-
-.spot-info-wrapper {
-    width: 90%;
-    height: calc(55% - 70px);
-    display: flex;
-    flex-direction: column;
+.slider-container {
+    height: 100%;
 }
 
+.slick-slider,
+.slick-slide,
+.slick-list,
+.slick-track {
+    height: 100% !important;
+}
+
+.slick-slide {
+    display: flex !important;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* Strzałki slidera */
 .slick-prev {
     left: 3% !important;
     z-index: 1;
     opacity: 0;
 }
 
-.photos-info-wrapper:hover .slick-prev{
+.photos-info-wrapper:hover .slick-prev {
     opacity: 1;
 }
 
@@ -92,64 +126,25 @@
     opacity: 0;
 }
 
-.photos-info-wrapper:hover .slick-next{
+.photos-info-wrapper:hover .slick-next {
     opacity: 1;
 }
 
 
-.slider-container {
-    height: 100%;
-}
-
-.slick-slide {
-    height: 100% !important;
-    display: flex !important;
-    flex-direction: column;
-    justify-content: center;
-}
-
-.slick-slider {
-    height: 100%;
-}
-
-
+/* ==========================================================================
+   ZDJĘCIE + NAKŁADKA AUTORA I OPISU
+   ========================================================================== */
 
 .photo-wrapper {
     position: relative;
     height: 70%;
     width: 100%;
     overflow: hidden;
+
     display: flex;
     justify-content: center;
     align-items: center;
 }
-
-
-
-
-.photo-info-wrapper {
-    position: absolute;
-    height: fit-content;
-    min-height: 32%;
-    width: 100%;
-    bottom: 0;
-    background: rgba(50, 50, 50, 0.5);
-    color: white;
-    /*padding: 0 10px 0 10px;*/
-    /*box-sizing: border-box;*/
-
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.4s ease;
-}
-
-
-/*.spot-photo {*/
-/*    !*TODO - zmienić wysokość rodzica i wtedy height 70%*!*/
-/*    height: 300px;*/
-/*    max-width: 100%;*/
-/*    object-fit: contain;*/
-/*}*/
 
 .spot-photo {
     height: 100%;
@@ -159,71 +154,230 @@
     transition: filter 0.3s ease;
 }
 
+/* Nakładka widoczna po najechaniu */
+.photo-info-wrapper {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: fit-content;
+    min-height: 40%;
+
+    background: rgba(50, 50, 50, 0.5);
+    color: white;
+
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+}
+
+.photos-info-wrapper:hover .photo-info-wrapper {
+    opacity: 1;
+    pointer-events: auto;
+}
 
 .caption {
     padding: 10px;
     font-size: 14px;
-    color: #ffffff;
+    color: #fff;
 }
-
 
 .author {
     text-align: right;
     padding: 0 10px 10px;
     font-size: 14px;
-    color: #ffffff;
-    /*font-weight: bold;*/
+    color: #fff;
 }
 
+
+/* ==========================================================================
+   OPIS SPOTA
+   ========================================================================== */
+
+/*.spot-info-wrapper {*/
+/*    width: 90%;*/
+/*    display: flex;*/
+/*    flex-direction: column;*/
+/*    flex-grow: 1;*/
+/*}*/
+.spot-info-wrapper {
+    width: 90%;
+    flex-grow: 0;
+    margin-top: 10px;
+}
+
+/*.spot-name {*/
+/*    font-size: 20px;*/
+/*    font-weight: bold;*/
+/*    padding-top: 20px;*/
+/*}*/
 .spot-name {
-    font-size: 20px;
-    font-weight: bold;
-    padding-top: 20px;
+    font-size: 22px;
+    padding-top: 0;
 }
 
+/*.label {*/
+/*    margin: 0;*/
+/*    color: #888;*/
+/*    padding: 20px 0 0;*/
+/*}*/
 .label {
-    margin: 0;
-    color: #888888;
-    padding: 30px 0 0;
-
+    padding-top: 12px;
+    font-size: 13px;
+    letter-spacing: 0.5px;
 }
 
 .descr {
     text-align: justify;
 }
 
-.no-photos{
+
+/* ==========================================================================
+   WIDOK "BRAK ZDJĘĆ"
+   ========================================================================== */
+
+.no-photos {
     display: flex;
     height: 100%;
-    align-items: center;
     flex-direction: column;
     justify-content: center;
-    padding-right: 20px;
-    padding-left: 20px;
+    align-items: center;
+    padding: 0 20px;
 }
 
-.no-photos h2{
+.no-photos h2,
+.no-photos p {
     text-align: center;
     padding-bottom: 20px;
 }
 
-.no-photos p{
-    text-align: center;
-    padding-bottom: 20px;
+
+/* ==========================================================================
+   PRZYCISK ZAMYKANIA PANELU
+   ========================================================================== */
+
+/*.info-close-btn {*/
+/*    position: absolute;*/
+/*    right: -12px;*/
+/*    top: 20px;*/
+
+/*    width: 28px;*/
+/*    height: 48px;*/
+
+/*    background-color: white;*/
+/*    color: #444;*/
+/*    border: 1px solid #ccc;*/
+/*    border-left: none;*/
+
+/*    border-radius: 0 12px 12px 0;*/
+
+/*    font-size: 24px;*/
+/*    font-weight: bold;*/
+/*    cursor: pointer;*/
+
+/*    display: flex;*/
+/*    justify-content: center;*/
+/*    align-items: center;*/
+
+/*    box-shadow: 2px 0 8px rgba(0,0,0,0.2);*/
+/*    transition: background 0.25s, transform 0.25s;*/
+/*}*/
+
+/*.info-close-btn:hover {*/
+/*    background-color: #f2f2f2;*/
+/*    transform: translateX(2px);*/
+/*}*/
+
+
+/* ==========================================================================
+   KOMENTARZE (scrollowane wewnątrz panelu)
+   ========================================================================== */
+
+/*.comments-section {*/
+/*    width: 90%;*/
+/*    margin-top: 20px;*/
+/*    display: flex;*/
+/*    flex-direction: column;*/
+/*}*/
+.comments-section {
+    width: 90%;
+    margin-top: 20px;
+    background: #f3f3f3;
+    padding: 12px 16px;
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
 }
 
-/* po najechaniu na całość photos-info-wrapper pokaz nakładkę */
-.photos-info-wrapper:hover .photo-info-wrapper {
-    opacity: 1;
-    pointer-events: auto;
+/*.comments-list {*/
+/*    max-height: 180px;         !* przewijane tylko w tej sekcji *!*/
+/*    overflow-y: auto;*/
+/*    padding-right: 6px;*/
+
+/*    scrollbar-width: thin;*/
+/*    scrollbar-color: #bbb transparent;*/
+/*}*/
+
+.comments-list {
+    max-height: 160px;
+    overflow-y: auto;
+    margin-top: 10px;
+    scrollbar-width: thin;
+    scrollbar-color: #bbb transparent;
 }
 
-.slick-list{
-    height: 100%!important;
+.comments-list::-webkit-scrollbar {
+    width: 6px;
 }
 
-.slick-track{
-    height: 100%;
+.comments-list::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 10px;
+}
+
+.comment {
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.comment-author {
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.comment-date {
+    font-size: 12px;
+    color: #777;
+    margin-bottom: 4px;
+}
+
+.comment-content {
+    font-size: 14px;
+    margin: 0;
+}
+
+.no-comments {
+    color: #777;
+    font-size: 14px;
+    padding: 8px 0;
 }
 
 
+/* ==========================================================================
+   PRZYCISK GOOGLE MAPS — ZAWSZE NA DOLE PANELU
+   ========================================================================== */
+
+/*.spot-google-btn-wrapper {*/
+/*    width: 90%;*/
+/*    margin-top: auto;       !* pcha do dołu panelu *!*/
+/*    padding-bottom: 20px;*/
+/*    display: flex;*/
+/*    justify-content: center;*/
+/*}*/
+
+.spot-google-btn-wrapper {
+    width: 90%;
+    margin-top: 24px;
+    padding-bottom: 24px;
+
+    display: flex;
+    justify-content: center;
+}
