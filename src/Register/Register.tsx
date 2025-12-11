@@ -32,7 +32,7 @@ export const Register = () => {
             alert("Konto założone! Możesz się teraz zalogować.");
             
             navigate('/');
-            setIsLoginOpen(true); 
+            setIsLoginOpen(true);
 
         } catch (err: any) {
             setError(err.message);
@@ -43,11 +43,12 @@ export const Register = () => {
         <>
             <div className="register-page">
                 <div className="register-container">
-                    <h1>Dołącz do PHOTOSPOT</h1>
-                    <p>Odkrywaj nowe miejsca i dziel się swoimi.</p>
+                    <h1>Dołącz do PhotoSpot 📸</h1>
+                    <p>Odkrywaj nieznane miejsca i dziel się swoimi.</p>
                     
-                    {error && <div className="error-msg">{error}</div>}
+                    {error && <div className="error-msg">⚠️ {error}</div>}
 
+                    {/* Formularz */}
                     <form onSubmit={handleRegister}>
                         <div className="form-group">
                             <label>Nazwa użytkownika</label>
@@ -55,7 +56,7 @@ export const Register = () => {
                                 type="text" 
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
-                                placeholder="Nazwa użytkownika"
+                                placeholder="Np. JanPodroznik"
                                 required 
                             />
                         </div>
@@ -66,7 +67,7 @@ export const Register = () => {
                                 type="email" 
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                placeholder="Email"
+                                placeholder="twoj@email.com"
                                 required 
                             />
                         </div>
@@ -77,7 +78,7 @@ export const Register = () => {
                                 type="password" 
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                placeholder="Hasło"
+                                placeholder="Minimum 6 znaków"
                                 required 
                             />
                         </div>
@@ -85,11 +86,11 @@ export const Register = () => {
                         <button type="submit" className="btn-register">Zarejestruj się</button>
                     </form>
 
-                    <div className="login-hint" style={{marginTop: '20px'}}>
-                        Masz już konto? {" "}
+                    <div className="login-hint">
+                        Masz już konto? 
                         <span 
                             onClick={() => setIsLoginOpen(true)} 
-                            style={{cursor: 'pointer', color: '#007bff', fontWeight: 'bold'}}
+                            style={{cursor: 'pointer'}}
                         >
                              Zaloguj się
                         </span>
