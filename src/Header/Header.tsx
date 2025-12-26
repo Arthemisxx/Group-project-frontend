@@ -1,10 +1,13 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import "./Header.css";
 import LoginModal from "../Login/LoginModal";
+import {useAuth} from "../Auth/AuthProvider.tsx";
+import {FaUser} from "react-icons/fa";
 
 export default function Header() {
     const [isLoginOpen, setIsLoginOpen] = useState(false);
+    const { isAuthenticated, logout } = useAuth();
 
     return (
         <>
@@ -22,12 +25,24 @@ export default function Header() {
                     </nav>
 
                     <div className="actions">
-                        <button
-                            className="btn-login"
-                            onClick={() => setIsLoginOpen(true)}
-                        >
-                            Zaloguj Się
-                        </button>
+                        {isAuthenticated ? (
+                            <Link to="/użytkownik">
+                                <button
+                                    className="btn-login"
+                                >
+                                    <FaUser />
+                                </button>
+                            </Link>
+
+                        ) : (
+                            <button
+                                className="btn-login"
+                                onClick={() => setIsLoginOpen(true)}
+                            >
+                                Zaloguj Się
+                            </button>
+                        )}
+
                     </div>
                 </div>
             </div>
