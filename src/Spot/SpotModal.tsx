@@ -1,13 +1,13 @@
-import "./SpotModal2.css";
-import type { Photo } from "../../Utils/Photo.ts";
-import type { Spot } from "../../Utils/Spot.ts";
-import { GoogleButton } from "./GoogleButton.tsx";
+import "./SpotModal.css";
+import type { Photo } from "../Utils/Photo.ts";
+import type { Spot } from "../Utils/Spot.ts";
+import { GoogleButton } from "../Map/components/GoogleButton.tsx";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { useState, useEffect } from "react";
 import {FaChevronLeft, FaChevronRight, FaPaperPlane, FaUserCircle} from "react-icons/fa";
-import type {Comment} from "../../Utils/Comment.ts";
+import type {Comment} from "../Utils/Comment.ts";
 
 interface ModalProps {
     onClose: () => void;

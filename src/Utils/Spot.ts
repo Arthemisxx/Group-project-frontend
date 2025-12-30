@@ -11,6 +11,19 @@ export interface Spot {
 
 }
 
+export interface SpotCreate{
+    title: string;
+    description?: string;
+    latitude: number;
+    longitude: number;
+    categoryId: Category;
+    author: Author;
+    addressName: string;
+    addressCountry: string;
+    addressRegion: string;
+
+}
+
 interface Category {
     id: number;
     name: string;

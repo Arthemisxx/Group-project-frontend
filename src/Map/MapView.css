@@ -213,6 +213,7 @@
 .spot-name {
     font-size: 22px;
     padding-top: 0;
+    cursor: pointer;
 }
 
 /*.label {*/

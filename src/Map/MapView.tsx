@@ -8,8 +8,7 @@ import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import {FaRegUser} from "react-icons/fa";
-// import {SpotModal} from "./components/SpotModal.tsx";
-import {SpotModal} from "./components/SpotModal2.tsx";
+import {SpotModal} from "../Spot/SpotModal.tsx";
 import type {Comment} from "../Utils/Comment.ts";
 import type {PostComment} from "../Utils/postComment.ts";
 import {postComment} from "../Utils/api.ts";
@@ -133,7 +132,11 @@ export const MapView = () => {
                         </div>
 
                         <div className={"spot-info-wrapper"}>
-                            <p className={"spot-name"}>{currentSpot?.title}</p>
+                            <p className={"spot-name"}
+                               onClick={() => {
+                                   setSelectedPhotoIndex(0)
+                                   setShowModal(true)
+                               }}>{currentSpot?.title}</p>
                             <p className={"label"}>Opis</p>
                             <p className={"descr"}>{currentSpot?.description}</p>
                         </div>
