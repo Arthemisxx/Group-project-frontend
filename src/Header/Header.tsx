@@ -6,6 +6,14 @@ import LoginModal from "../Login/LoginModal";
 export default function Header() {
     const [isLoginOpen, setIsLoginOpen] = useState(false);
 
+
+    const isUserLoggedIn = !!localStorage.getItem("token");
+
+    const handleLogout = () => {
+        localStorage.removeItem("token");
+        window.location.reload();
+    };
+
     return (
         <>
             <div className="header-wrapper">
@@ -22,12 +30,23 @@ export default function Header() {
                     </nav>
 
                     <div className="actions">
-                        <button
-                            className="btn-login"
-                            onClick={() => setIsLoginOpen(true)}
-                        >
-                            Zaloguj Się
-                        </button>
+                        {isUserLoggedIn ? (
+
+                            <button
+                                className="btn-login"
+                                onClick={handleLogout}
+                            >
+                                Wyloguj
+                            </button>
+                        ) : (
+
+                            <button
+                                className="btn-login"
+                                onClick={() => setIsLoginOpen(true)}
+                            >
+                                Zaloguj Się
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>
@@ -35,6 +54,8 @@ export default function Header() {
             <LoginModal
                 isOpen={isLoginOpen}
                 onClose={() => setIsLoginOpen(false)}
+
+                onLoginSuccess={() => window.location.reload()}
             />
         </>
     );

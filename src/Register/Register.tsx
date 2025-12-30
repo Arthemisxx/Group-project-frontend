@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import LoginModal from "../Login/LoginModal"; 
-import './Register.css'; 
+import LoginModal from "../Login/LoginModal";
+import VerificationModal from "./VerificationModal";
+import './Register.css';
 
 export const Register = () => {
     const [username, setUsername] = useState('');
@@ -9,8 +10,13 @@ export const Register = () => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
 
+
     const [isLoginOpen, setIsLoginOpen] = useState(false);
-    
+    const [isVerifyOpen, setIsVerifyOpen] = useState(false);
+
+
+    const [loginMessage, setLoginMessage] = useState("");
+
     const navigate = useNavigate();
 
     const handleRegister = async (e: React.FormEvent) => {
@@ -29,14 +35,23 @@ export const Register = () => {
                 throw new Error(errorText || "Rejestracja nieudana");
             }
 
-            alert("Konto założone! Możesz się teraz zalogować.");
-            
-            navigate('/');
-            setIsLoginOpen(true);
+            setIsVerifyOpen(true);
 
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err) {
+            setError((err as Error).message || "Wystąpił błąd");
         }
+    };
+
+    const handleVerificationSuccess = () => {
+        setIsVerifyOpen(false);
+
+        setLoginMessage("Konto zweryfikowane pomyślnie! Zaloguj się, aby kontynuować.");
+        setIsLoginOpen(true);
+    };
+
+    const handleLoginClose = () => {
+        setIsLoginOpen(false);
+        setLoginMessage("");
     };
 
     return (
@@ -45,52 +60,51 @@ export const Register = () => {
                 <div className="register-container">
                     <h1>Dołącz do PhotoSpot 📸</h1>
                     <p>Odkrywaj nieznane miejsca i dziel się swoimi.</p>
-                    
+
                     {error && <div className="error-msg">⚠️ {error}</div>}
 
-                    {/* Formularz */}
                     <form onSubmit={handleRegister}>
                         <div className="form-group">
                             <label>Nazwa użytkownika</label>
-                            <input 
-                                type="text" 
+                            <input
+                                type="text"
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
                                 placeholder="Np. JanPodroznik"
-                                required 
+                                required
                             />
                         </div>
-
                         <div className="form-group">
                             <label>Email</label>
-                            <input 
-                                type="email" 
+                            <input
+                                type="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 placeholder="twoj@email.com"
-                                required 
+                                required
                             />
                         </div>
-
                         <div className="form-group">
                             <label>Hasło</label>
-                            <input 
-                                type="password" 
+                            <input
+                                type="password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 placeholder="Minimum 6 znaków"
-                                required 
+                                required
                             />
                         </div>
-
                         <button type="submit" className="btn-register">Zarejestruj się</button>
                     </form>
 
                     <div className="login-hint">
-                        Masz już konto? 
-                        <span 
-                            onClick={() => setIsLoginOpen(true)} 
-                            style={{cursor: 'pointer'}}
+                        Masz już konto?
+                        <span
+                            onClick={() => {
+                                setLoginMessage("");
+                                setIsLoginOpen(true);
+                            }}
+                            style={{cursor: 'pointer', color: 'blue', textDecoration: 'underline'}}
                         >
                              Zaloguj się
                         </span>
@@ -100,7 +114,21 @@ export const Register = () => {
 
             <LoginModal
                 isOpen={isLoginOpen}
-                onClose={() => setIsLoginOpen(false)}
+                onClose={handleLoginClose}
+                initialEmail={email}
+                successMessage={loginMessage}
+                onLoginSuccess={() => {
+                    setIsLoginOpen(false);
+                    navigate('/');
+                    window.location.reload();
+                }}
+            />
+
+            <VerificationModal
+                isOpen={isVerifyOpen}
+                onClose={() => setIsVerifyOpen(false)}
+                email={email}
+                onVerified={handleVerificationSuccess}
             />
         </>
     );
