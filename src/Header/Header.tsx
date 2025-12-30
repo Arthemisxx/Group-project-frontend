@@ -2,13 +2,22 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import "./Header.css";
 import LoginModal from "../Login/LoginModal";
+import RegisterModal from "../Register/RegisterModal";
+import VerificationModal from "../Register/VerificationModal";
 import {useAuth} from "../Auth/AuthProvider.tsx";
 import {FaUser} from "react-icons/fa";
 
 export default function Header() {
     const [isLoginOpen, setIsLoginOpen] = useState(false);
     const { isAuthenticated, logout } = useAuth();
+    const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+    const [isVerifyOpen, setIsVerifyOpen] = useState(false);
+    const [emailToVerify, setEmailToVerify] = useState("");
 
+    const handleLogout = () => {
+        logout();
+
+    };
     return (
         <>
             <div className="header-wrapper">
@@ -26,15 +35,27 @@ export default function Header() {
 
                     <div className="actions">
                         {isAuthenticated ? (
-                            <Link to="/użytkownik">
+
+                            <div style={{display: "flex", alignItems: "center", gap: "10px"}}>
+                                {/* Ikonka profilu */}
+                                <Link to="/użytkownik">
+                                    <button className="btn-login">
+                                        <FaUser/>
+                                    </button>
+                                </Link>
+
+                                {/* WYLOGUJ */}
                                 <button
                                     className="btn-login"
+                                    onClick={handleLogout}
+                                    style={{fontSize: "0.8rem", padding: "0 15px"}}
                                 >
-                                    <FaUser />
+                                    Wyloguj
                                 </button>
-                            </Link>
+                            </div>
 
                         ) : (
+
                             <button
                                 className="btn-login"
                                 onClick={() => setIsLoginOpen(true)}
@@ -42,7 +63,6 @@ export default function Header() {
                                 Zaloguj Się
                             </button>
                         )}
-
                     </div>
                 </div>
             </div>
@@ -50,6 +70,36 @@ export default function Header() {
             <LoginModal
                 isOpen={isLoginOpen}
                 onClose={() => setIsLoginOpen(false)}
+                onSwitchToRegister={() => {
+                    setIsLoginOpen(false);
+                    setIsRegisterOpen(true);
+                }}
+            />
+
+            <RegisterModal
+                isOpen={isRegisterOpen}
+                onClose={() => setIsRegisterOpen(false)}
+                onSwitchToLogin={() => {
+                    setIsRegisterOpen(false);
+                    setIsLoginOpen(true);
+                }}
+                onRegisterSuccess={(email) => {
+
+                    setEmailToVerify(email);
+                    setIsRegisterOpen(false);
+                    setIsVerifyOpen(true);
+                }}
+            />
+
+
+            <VerificationModal
+                isOpen={isVerifyOpen}
+                onClose={() => setIsVerifyOpen(false)}
+                email={emailToVerify}
+                onVerified={() => {
+                    setIsVerifyOpen(false);
+                    setIsLoginOpen(true); //
+                }}
             />
         </>
     );

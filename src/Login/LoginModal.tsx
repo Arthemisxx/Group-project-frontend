@@ -1,5 +1,4 @@
-import React from "react";
-import {useState} from "react";
+import React, { useState, useEffect } from "react";
 import "./LoginModal.css";
 import axiosClient from "../Auth/axiosClient.ts";
 import {useAuth} from "../Auth/AuthProvider.tsx";
@@ -8,14 +7,22 @@ import {useNavigate} from "react-router-dom";
 interface LoginModalProps {
     isOpen: boolean;
     onClose: () => void;
+    onSwitchToRegister: () => void;
 }
 
 
-export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
+export default function LoginModal({ isOpen, onClose, onSwitchToRegister }: LoginModalProps) {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const { login } = useAuth(); // Pobieramy funkcję login z kontekstu
     const navigate = useNavigate();
+
+    useEffect(() => {
+        if (!isOpen) {
+            setUsername('');
+            setPassword('');
+        }
+    }, [isOpen]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -61,7 +68,21 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                 </form>
 
                 <p className="signup-link">
-                    Nie masz konta? <a href="/register">Zarejestruj się</a>
+                    Nie masz konta?
+                    <span
+                        onClick={() => {
+                            onClose();
+                            onSwitchToRegister();
+                        }}
+                        style={{
+                            cursor: "pointer",
+                            color: "#007bff",
+                            textDecoration: "underline",
+                            marginLeft: "5px"
+                        }}
+                    >
+                    Zarejestruj się
+                    </span>
                 </p>
             </div>
         </div>
