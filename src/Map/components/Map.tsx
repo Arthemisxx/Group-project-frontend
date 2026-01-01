@@ -59,9 +59,16 @@ interface MapProps {
     sendPhotosDataToMapView: (photos: Photo[]) => void;
     sendCommentsDataToMapView: (comments: Comment[]) => void;
     refreshTrigger: number;
+    refreshSpots: number;
 }
 
-export const Map = ({sendSpotDataToMapView, sendPhotosDataToMapView, sendCommentsDataToMapView, refreshTrigger}: MapProps) => {
+export const Map = ({
+                        sendSpotDataToMapView,
+                        sendPhotosDataToMapView,
+                        sendCommentsDataToMapView,
+                        refreshTrigger,
+                        refreshSpots
+                    }: MapProps) => {
     const [spots, setSpots] = useState<null | Spot[]>()
     const [photos, setPhotos] = useState<Photo[]>([])
     const [userLocation, setUserLocation] = useState<[number, number]>([51.777024, 19.486368]);
@@ -70,8 +77,8 @@ export const Map = ({sendSpotDataToMapView, sendPhotosDataToMapView, sendComment
     const [currentSpotComments, setCurrentSpotComments] = useState<Comment[]>([])
 
     useEffect(() => {
-            sendSpotDataToMapView(currentSpot);
-   
+        sendSpotDataToMapView(currentSpot);
+
     }, [currentSpot, sendSpotDataToMapView]);
 
     useEffect(() => {
@@ -83,30 +90,35 @@ export const Map = ({sendSpotDataToMapView, sendPhotosDataToMapView, sendComment
         sendCommentsDataToMapView(currentSpotComments)
 
     }, [currentSpotComments, sendCommentsDataToMapView]);
-    
-    useEffect(() => {
-        const init = async () => {
-            let response: Spot[] = [];
-            response = await fetchSpotsData(-90, 90, -180, 180);
-            setSpots(response as Spot[]);
 
-        }
-        init();
-    }, []);
+    useEffect(() => {
+        const loadSpots = async () => {
+            try {
+                // Pobieramy spoty
+                const response = await fetchSpotsData(-90, 90, -180, 180);
+                setSpots(response);
+            } catch (e) {
+                console.error("Błąd pobierania spotów:", e);
+            }
+        };
+
+        loadSpots();
+    }, [refreshSpots]);
 
     useEffect(() => {
         if (currentSpot) {
             getComments(currentSpot.id);
         }
+
     }, [currentSpot, refreshTrigger]);
 
-    const getPhotos = async (id :number) => {
+    const getPhotos = async (id: number) => {
         let response: Photo[] = [];
         response = await fetchSpotPhotos(id);
         setPhotos(response as Photo[])
     }
 
-    const getComments = async (id:number)=> {
+    const getComments = async (id: number) => {
         let response: Comment[] = [];
         response = await fetchComments(id);
         setCurrentSpotComments(response as Comment[])
@@ -116,7 +128,7 @@ export const Map = ({sendSpotDataToMapView, sendPhotosDataToMapView, sendComment
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition((position) => {
                     const {latitude, longitude} = position.coords;
-                setUserLocation([latitude, longitude]);
+                    setUserLocation([latitude, longitude]);
 
                 }, (error) => {
                     console.error('Error getting user location:', error);
@@ -142,7 +154,7 @@ export const Map = ({sendSpotDataToMapView, sendPhotosDataToMapView, sendComment
         <>
             <div className={"map-wrapper"}>
                 <button className={"user-localization"} onClick={findUserLocation}><img src="public/my-location.svg"
-                                                                                 alt="My location"/></button>
+                                                                                        alt="My location"/></button>
                 <MapContainer center={userLocation} zoom={7} scrollWheelZoom={true}
                               style={{height: '100%', width: '100%'}}>
                     <TileLayer
@@ -158,7 +170,7 @@ export const Map = ({sendSpotDataToMapView, sendPhotosDataToMapView, sendComment
                                 getPhotos(spot.id);
                                 getComments(spot.id);
                             }
-                        }} >
+                        }}>
 
                         </Marker>
                     ))}

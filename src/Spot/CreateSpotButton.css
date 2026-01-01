@@ -1,0 +1,69 @@
+
+.add-spot-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    font-family: inherit;
+    outline: none;
+    z-index: 1000; /* Żeby był nad mapą */
+}
+
+.add-spot-btn.fab {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background-color: #222;
+    color: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.add-spot-btn.fab:hover {
+    background-color: #000;
+    transform: scale(1.05);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.add-spot-btn.fab:active {
+    transform: scale(0.95);
+}
+
+.add-spot-btn.standard {
+    padding: 10px 20px;
+    background-color: #222;
+    color: white;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.add-spot-btn.standard:hover {
+    background-color: #000;
+    transform: translateY(-1px);
+}
+
+.add-spot-btn.outline {
+    padding: 8px 16px;
+    background-color: transparent;
+    color: #333;
+    border: 2px solid #333;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.add-spot-btn.outline:hover {
+    background-color: #333;
+    color: white;
+}
+
+.btn-icon {
+    margin-right: 8px;
+}
+
+.btn-label {
+    letter-spacing: 0.3px;
+}

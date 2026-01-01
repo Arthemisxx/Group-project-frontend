@@ -7,7 +7,7 @@ import {FaUser} from "react-icons/fa";
 
 export default function Header() {
     const [isLoginOpen, setIsLoginOpen] = useState(false);
-    const { isAuthenticated, logout } = useAuth();
+    const { isAuthenticated} = useAuth();
 
     return (
         <>
