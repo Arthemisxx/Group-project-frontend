@@ -1,44 +1,136 @@
+import { useState, useEffect } from 'react';
 import './Explore.css';
-
-// Przykładowe dane, aby odwzorować układ z Figmy
-// W przyszłości podmienisz to na dane z API
-const exploreItems = [
-    { id: 1, height: 300, color: '#a8d5c3', title: 'Abstract Green' }, // Krótki
-    { id: 2, height: 200, color: '#9dc5d8', title: 'Blue Abstract' }, // Bardzo krótki
-    { id: 3, height: 400, color: '#d4cfb0', title: 'Gradient Mesh' }, // Wysoki
-    { id: 4, height: 350, color: '#7fb7be', title: 'Teal Waves' },
-    { id: 5, height: 250, color: '#a2d2ff', title: 'Soft Blur' },
-    { id: 6, height: 380, color: '#84dcc6', title: 'Green Dots' },
-    { id: 7, height: 320, color: '#b8e0d2', title: 'Pastel Vibes' },
-    { id: 8, height: 280, color: '#95b8d1', title: 'Cold Blue' },
-    { id: 9, height: 410, color: '#eac4d5', title: 'Pink Haze' },
-];
+import { SpotModal } from '../Map/components/SpotModal';
 
 export const Explore = () => {
+    const [photos, setPhotos] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [selectedPhoto, setSelectedPhoto] = useState<any>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    useEffect(() => {
+        fetch('http://localhost:8080/spots/map/search?minLat=-90&maxLat=90&minLng=-180&maxLng=180')
+            .then(r => r.json())
+            .then(spots => {
+                const photoPromises = spots.map((spot: any) =>
+                    fetch(`http://localhost:8080/photos/spot/${spot.id}`)
+                        .then(r => r.json())
+                        .then(spotPhotos => {
+                            return spotPhotos.map((photo: any) => ({
+                                ...photo,
+                                spot: spot
+                            }));
+                        })
+                        .catch(() => [])
+                );
+
+                return Promise.all(photoPromises);
+            })
+            .then(photoArrays => {
+                const allPhotos = photoArrays.flat();
+                console.log(`Znaleziono ${allPhotos.length} zdjęć`);
+                setPhotos(allPhotos);
+                setLoading(false);
+            })
+            .catch(err => {
+                console.error('Błąd:', err);
+                setLoading(false);
+            });
+    }, []);
+
+    const handleCardClick = (photo: any) => {
+        setSelectedPhoto(photo);
+        setIsModalOpen(true);
+        document.body.style.overflow = 'hidden';
+    };
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setSelectedPhoto(null);
+        document.body.style.overflow = 'auto';
+    };
+
+    const getRandomHeight = () => {
+        const heights = [250, 300, 350, 400, 450];
+        return heights[Math.floor(Math.random() * heights.length)];
+    };
+
+    if (loading) {
+        return (
+            <div className="explore-container">
+                <div style={{ textAlign: 'center', marginTop: '100px' }}>
+                    <p>Ładowanie zdjęć...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (photos.length === 0) {
+        return (
+            <div className="explore-container">
+                <div className="explore-header">
+                    <h2>Odkrywaj niesamowite miejsca</h2>
+                    <p>Brak zdjęć do wyświetlenia. Dodaj pierwsze!</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <section className="explore-container">
             <div className="explore-header">
-                <h2>Highlight what’s great in pictures</h2>
-                <p>This is what makes these images special.</p>
+                <h2>Odkrywaj niesamowite miejsca</h2>
             </div>
 
             <div className="masonry-grid">
-                {exploreItems.map((item) => (
-                    <div key={item.id} className="grid-item">
-                        {/* Tutaj symuluję obrazek div-em z kolorem,
-                           żeby wyglądało jak na Twoim screenie "abstract".
-                           Docelowo będzie tu tag <img src={item.url} />
-                        */}
-                        <div
-                            className="image-placeholder"
-                            style={{
-                                height: `${item.height}px`,
-                                background: `linear-gradient(15deg, ${item.color} 0%, #ffffff 100%)`
+                {photos.map((photo) => (
+                    <div
+                        key={`photo-${photo.id}`}
+                        className="grid-item"
+                        onClick={() => handleCardClick(photo)}
+                    >
+                        <img
+                            src={photo.url}
+                            alt={photo.spot?.title || 'Zdjęcie miejsca'}
+                            className="grid-image"
+                            style={{ height: `${getRandomHeight()}px` }}
+                            loading="lazy"
+                            onError={(e) => {
+                                (e.target as HTMLImageElement).src =
+                                    'https://via.placeholder.com/400x300/cccccc/666666?text=Brak+zdjęcia';
                             }}
-                        ></div>
+                        />
+
+                        <div className="grid-overlay">
+                            <h3 className="grid-title">
+                                {photo.spot?.title || 'Nieznane miejsce'}
+                            </h3>
+                            {photo.spot?.address && (
+                                <p className="grid-location">
+                                    {photo.spot.address.country}
+                                    {photo.spot.address.region && `, ${photo.spot.address.region}`}
+                                </p>
+                            )}
+                        </div>
+
+                        <div className="grid-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                        </div>
                     </div>
                 ))}
             </div>
+
+            {selectedPhoto && (
+                <SpotModal
+                    open={isModalOpen}
+                    onClose={handleCloseModal}
+                    photo={selectedPhoto}
+                    spot={selectedPhoto.spot}
+                />
+            )}
         </section>
     );
 };
