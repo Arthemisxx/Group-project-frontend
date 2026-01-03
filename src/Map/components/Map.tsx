@@ -56,11 +56,12 @@ const MapController = ({onMapReady}) => {
 
 interface MapProps {
     sendSpotDataToMapView: (spot: Spot | null) => void;
-    sendPhotosDataToMapView: (photos: Photo[]) => void
-    sendCommentsDataToMapView: (comments: Comment[]) => void
+    sendPhotosDataToMapView: (photos: Photo[]) => void;
+    sendCommentsDataToMapView: (comments: Comment[]) => void;
+    refreshTrigger: number;
 }
 
-export const Map = ({sendSpotDataToMapView, sendPhotosDataToMapView, sendCommentsDataToMapView}: MapProps) => {
+export const Map = ({sendSpotDataToMapView, sendPhotosDataToMapView, sendCommentsDataToMapView, refreshTrigger}: MapProps) => {
     const [spots, setSpots] = useState<null | Spot[]>()
     const [photos, setPhotos] = useState<Photo[]>([])
     const [userLocation, setUserLocation] = useState<[number, number]>([51.777024, 19.486368]);
@@ -92,6 +93,12 @@ export const Map = ({sendSpotDataToMapView, sendPhotosDataToMapView, sendComment
         }
         init();
     }, []);
+
+    useEffect(() => {
+        if (currentSpot) {
+            getComments(currentSpot.id);
+        }
+    }, [currentSpot, refreshTrigger]);
 
     const getPhotos = async (id :number) => {
         let response: Photo[] = [];

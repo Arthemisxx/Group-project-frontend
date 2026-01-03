@@ -1,0 +1,10 @@
+
+
+
+export const AddSpotModal = () => {
+    return (
+        <>
+
+        </>
+    );
+};

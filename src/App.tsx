@@ -4,20 +4,24 @@ import Home from "./Home/Home.tsx";
 import {BrowserRouter, Route, Routes} from "react-router-dom";
 import {MapView} from "./Map/MapView.tsx";
 import {Explore} from "./Explore/Explore.tsx";
+import {AuthProvider} from "./Auth/AuthProvider.tsx";
 
 function App() {
-  return (
-    <>
-      <BrowserRouter>
-      <Header />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/mapa" element={<MapView />} />
-        <Route path="/odkrywaj" element={<Explore />} />
-      </Routes>
-      </BrowserRouter>
-    </>
-  )
+    return (
+        <>
+            <AuthProvider>
+                <BrowserRouter>
+                    <Header/>
+                    <Routes>
+                        <Route path="/" element={<Home/>}/>
+                        <Route path="/mapa" element={<MapView/>}/>
+                        <Route path="/odkrywaj" element={<Explore/>}/>
+                    </Routes>
+                </BrowserRouter>
+            </AuthProvider>
+
+        </>
+    )
 }
 
 export default App

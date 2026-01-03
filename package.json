@@ -11,7 +11,9 @@
   },
   "dependencies": {
     "@types/react-slick": "^0.23.13",
+    "axios": "^1.13.2",
     "dotenv": "^17.2.3",
+    "jwt-decode": "^4.0.0",
     "leaflet": "^1.9.4",
     "leaflet-geosearch": "^4.2.2",
     "react": "^19.0.0-rc.1",
