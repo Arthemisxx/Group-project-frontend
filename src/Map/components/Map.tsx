@@ -60,6 +60,7 @@ interface MapProps {
     sendCommentsDataToMapView: (comments: Comment[]) => void;
     refreshTrigger: number;
     refreshSpots: number;
+    flyToLocation: { lat: number; lng: number } | null;
 }
 
 export const Map = ({
@@ -67,7 +68,8 @@ export const Map = ({
                         sendPhotosDataToMapView,
                         sendCommentsDataToMapView,
                         refreshTrigger,
-                        refreshSpots
+                        refreshSpots,
+                        flyToLocation
                     }: MapProps) => {
     const [spots, setSpots] = useState<null | Spot[]>()
     const [photos, setPhotos] = useState<Photo[]>([])
@@ -90,6 +92,15 @@ export const Map = ({
         sendCommentsDataToMapView(currentSpotComments)
 
     }, [currentSpotComments, sendCommentsDataToMapView]);
+
+    useEffect(() => {
+        if (mapInstance && flyToLocation) {
+            // @ts-ignore
+            mapInstance.flyTo([flyToLocation.lat, flyToLocation.lng], 12, {
+                duration: 1.5
+            });
+        }
+    }, [mapInstance, flyToLocation]);
 
     useEffect(() => {
         const loadSpots = async () => {

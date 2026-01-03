@@ -1,9 +1,10 @@
+
 /* Tło modala */
 .modal {
     position: fixed;
     inset: 0;
     backdrop-filter: blur(8px);
-    background: rgba(0, 0, 0, 0.6);
+    background: rgba(0, 0, 0, 0.8); /* Nieco ciemniejsze tło dla lepszego kontrastu */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -18,53 +19,57 @@
     background: #fff;
     width: 100%;
     max-width: 1100px;
-    height: 85vh;
+    height: 85vh; /* Stała wysokość względem okna */
     border-radius: 16px;
     box-shadow: 0 10px 40px rgba(0,0,0,0.3);
     overflow: hidden;
     position: relative;
 }
 
-/* LEWA STRONA - Wrapper Slidera */
+/* === LEWA STRONA - Wrapper Slidera === */
 .modal-photo-wrapper {
-    flex: 1.4;
-    background: #000;
+    flex: 1.4; /* Zajmuje więcej miejsca niż info */
+    background: #000; /* Czarne tło pod zdjęciami */
+    position: relative;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    position: relative;
-    overflow: hidden;
+    /* Kluczowe: min-height zapobiega zapadaniu się w rzadkich przypadkach */
+    min-height: 0;
 }
 
-/* Dostosowanie Slick Slidera do Flexboxa */
+/* === NAPRAWA REACT SLICK (Kluczowa sekcja) === */
 .modal-slider {
     width: 100%;
     height: 100%;
-    display: flex;
-    align-items: center;
 }
 
+/* Wymuszamy wysokość na wszystkich wewnętrznych kontenerach slicka */
 .modal-slider .slick-list,
-.modal-slider .slick-track {
+.modal-slider .slick-track,
+.modal-slider .slick-slide,
+.modal-slider .slick-slide > div {
     height: 100%;
-    display: flex;
-    align-items: center;
 }
 
+/* Kontener pojedynczego slajdu - centruje zdjęcie */
 .modal-slide-container {
     height: 100%;
-    display: flex !important;
+    width: 100%;
+    display: flex !important; /* Slick nadpisuje display, więc !important */
     justify-content: center;
     align-items: center;
     outline: none;
 }
 
+/* Samo zdjęcie */
 .modal-photo {
     max-width: 100%;
     max-height: 100%;
     width: auto;
     height: auto;
-    object-fit: contain;
+    object-fit: contain; /* Zdjęcie dopasuje się bez ucinania */
     display: block;
 }
 
@@ -109,7 +114,7 @@
 }
 
 
-/* PRAWA STRONA - Info */
+/* === PRAWA STRONA - Info === */
 .modal-info {
     flex: 0.8;
     padding: 30px;
@@ -185,7 +190,6 @@
     border: 1px solid #eee;
     display: flex;
     flex-direction: column;
-    /* Dzięki temu sekcja nie rozepcha modala w nieskończoność */
     max-height: 350px;
 }
 
@@ -203,13 +207,10 @@
     overflow-y: auto;
     padding-right: 8px;
     margin-bottom: 12px;
-
-    /* Stylizacja paska przewijania (Firefox) */
     scrollbar-width: thin;
     scrollbar-color: #ccc transparent;
 }
 
-/* Stylizacja paska przewijania (Webkit/Chrome) */
 .modal-comments-list::-webkit-scrollbar {
     width: 6px;
 }
@@ -265,7 +266,7 @@
     color: #555;
     margin: 0;
     line-height: 1.4;
-    word-break: break-word; /* Ważne przy długich słowach */
+    word-break: break-word;
 }
 
 .no-comments-text {
@@ -274,6 +275,12 @@
     font-size: 13px;
     padding: 10px 0;
     font-style: italic;
+}
+
+.no-photos-placeholder{
+    color: #595959;
+    font-weight: bold;
+    text-align: center;
 }
 
 /* Formularz dodawania */
@@ -292,7 +299,7 @@
     padding: 8px 12px;
     font-family: inherit;
     font-size: 13px;
-    resize: none; /* Blokada zmiany rozmiaru */
+    resize: none;
     outline: none;
     transition: border-color 0.2s;
     background: white;
@@ -326,9 +333,7 @@
 }
 
 
-
-
-/* Ikona zamknięcia X w prawym górnym rogu */
+/* Ikona zamknięcia X */
 .modal-close-icon {
     position: absolute;
     top: 15px;
@@ -361,7 +366,7 @@
     to { opacity: 1; }
 }
 
-/* RWD */
+/* RWD - Responsywność */
 @media (max-width: 900px) {
     .modal-wrapper {
         flex-direction: column;
@@ -371,7 +376,7 @@
 
     .modal-photo-wrapper {
         flex: none;
-        height: 40vh;
+        height: 40vh; /* Na mobilce zdjęcia mają stałą wysokość */
     }
 
     .modal-info {

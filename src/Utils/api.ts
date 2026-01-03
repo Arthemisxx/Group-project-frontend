@@ -6,6 +6,31 @@ import type {Comment} from "./Comment.ts";
 import type {PostComment} from "./postComment.ts";
 
 
+export interface UploadPhotoData {
+    file: File;
+    caption: string;
+}
+
+export const uploadSpotPhoto = async (spotId: number, photoData: UploadPhotoData) => {
+    const formData = new FormData();
+
+    formData.append("image", photoData.file);
+
+    const jsonBody = JSON.stringify({
+        spot_id: spotId,
+        caption: photoData.caption || ""
+    });
+
+    const jsonBlob = new Blob([jsonBody], { type: 'application/json' });
+    formData.append("data", jsonBlob);
+
+    return await axiosClient.post('/photos/upload', formData, {
+        headers: {
+            "Content-Type": "multipart/form-data",
+        },
+    });
+};
+
 export const fetchSpotsData = async (minLat: number, maxLat: number, minLng: number, maxLng: number): Promise<Spot[]> => {
     const response = await axiosClient.get<Spot[]>('/spots/map/search', {
         params: {

@@ -99,6 +99,7 @@ export const SpotModal = ({ open, onClose, spot, photos, comments, onAddComment,
                         </Slider>
                     ) : (
                         <div className="no-photos-placeholder">Brak zdjęć</div>
+                        //TODO dodaj zdjęcie przycisk
                     )}
                 </div>
 
