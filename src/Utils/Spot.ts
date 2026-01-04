@@ -16,15 +16,14 @@ export interface SpotCreate{
     description?: string;
     latitude: number;
     longitude: number;
-    categoryId: Category;
-    author: Author;
+    categoryId: number;
     addressName: string;
     addressCountry: string;
     addressRegion: string;
-
+    tagNames: string[];
 }
 
-interface Category {
+export interface Category {
     id: number;
     name: string;
 }

@@ -2,7 +2,7 @@ import './MapView.css';
 import {Map} from "./components/Map.tsx"
 import {GoogleButton} from "./components/GoogleButton.tsx";
 import {useState} from "react";
-import type {Spot} from "../Utils/Spot.ts";
+import type {Spot, SpotCreate} from "../Utils/Spot.ts";
 import type {Photo} from "../Utils/Photo.ts";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
@@ -11,18 +11,27 @@ import {FaRegUser} from "react-icons/fa";
 import {SpotModal} from "../Spot/SpotModal.tsx";
 import type {Comment} from "../Utils/Comment.ts";
 import type {PostComment} from "../Utils/postComment.ts";
-import {postComment} from "../Utils/api.ts";
+import {insertComment, insertSpot, uploadSpotPhoto} from "../Utils/api.ts";
 import {useAuth} from "../Auth/AuthProvider.tsx";
+import {CreateSpotButton} from "../Spot/CreateSpotButton.tsx";
+import {CreateSpotModal, type PhotoDraft} from "../Spot/CreateSpotModal.tsx";
 
 export const MapView = () => {
     const [currentSpot, setCurrentSpot] = useState<Spot | null>(null)
     const [currentSpotPhotos, setCurrentSpotPhotos] = useState<Photo[]>([])
     const [currentSpotComments, setCurrentSpotComments] = useState<Comment[]>([])
     const [showModal, setShowModal] = useState<boolean>(false);
-    // const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
     const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number>(0);
     const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
+    const [refreshSpots, setRefreshSpots] = useState<number>(0)
+    const [mapTargetLocation, setMapTargetLocation] = useState<{ lat: number, lng: number } | null>(null);
+
     const {isAuthenticated} = useAuth();
+
+    const [showCreateModal, setShowCreateModal] = useState(false);
+    const [newSpotLocation, setNewSpotLocation] = useState<{ lat: number, lng: number } | null>(null);
+
+
 
     function handleSpotDataFromMap(spot: Spot | null) {
         setCurrentSpot(spot)
@@ -62,7 +71,6 @@ export const MapView = () => {
         }
     }
 
-
     async function handleAddComment(content: string) {
         if (!currentSpot) return;
 
@@ -73,7 +81,7 @@ export const MapView = () => {
                 spotId: currentSpot.id,
             }
             console.log(newComment);
-            await postComment(newComment);
+            await insertComment(newComment);
 
             setRefreshTrigger(prev => prev + 1);
 
@@ -81,6 +89,57 @@ export const MapView = () => {
             console.error("Błąd dodawania komentarza", error);
         }
     }
+
+    const handleCreateSpot = async (data: SpotCreate, photos: PhotoDraft[]) => {
+        try {
+            console.log("Tworzenie spota...");
+
+            const createdSpot = await insertSpot(data);
+            const newSpotId = createdSpot.id; // Zakładam, że backend zwraca utworzony obiekt z ID
+
+            console.log(`Spot utworzony (ID: ${newSpotId}).`);
+
+            if (photos.length > 0) {
+                console.log(`Wysyłanie ${photos.length} zdjęć...`);
+
+                await Promise.all(photos.map(photoDraft => {
+                    return uploadSpotPhoto(newSpotId, {
+                        file: photoDraft.file,
+                        caption: photoDraft.caption
+                    });
+                }));
+            }
+
+            setShowCreateModal(false);
+            setRefreshSpots(prev => prev + 1);
+            setMapTargetLocation({
+                lat: createdSpot.latitude,
+                lng: createdSpot.longitude
+            });
+            alert("Miejsce i zdjęcia zostały dodane!");
+
+        } catch (error) {
+            console.error("Błąd podczas tworzenia spota:", error);
+            alert("Wystąpił błąd. Sprawdź konsolę.");
+        }
+    };
+
+    const handleFabClick = () => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition((position) => {
+                setNewSpotLocation({
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude
+                });
+                setShowCreateModal(true);
+            }, () => {
+                setNewSpotLocation(null);
+                setShowCreateModal(true);
+            });
+        } else {
+            setShowCreateModal(true);
+        }
+    };
 
     return (
 
@@ -114,11 +173,11 @@ export const MapView = () => {
                                             ))}
                                         </Slider>
                                     ) :
-                                    // {isAuthenticated ? ():()}
                                     (
                                         <div className="no-photos">
                                             {isAuthenticated ? (
                                                     <><h2>Nikt jeszcze nie dodał zdjęcia</h2><p>Chcesz być pierwszy?</p></>
+                                                //TODO dodawanie zdjęć przycisk
                                                 ) :
                                                 (
                                                     <><h2>Nikt jeszcze nie dodał zdjęcia</h2><p>Chcesz być pierwszy?</p>
@@ -171,13 +230,20 @@ export const MapView = () => {
             </div>
             <div className={`map-view ${currentSpot ? "with-spot" : "no-spot"}`}>
                 <Map sendSpotDataToMapView={handleSpotDataFromMap} sendPhotosDataToMapView={handlePhotosDataFromMap}
-                     sendCommentsDataToMapView={handleCommentsDataFromMap} refreshTrigger={refreshTrigger}/>
+                     sendCommentsDataToMapView={handleCommentsDataFromMap} refreshTrigger={refreshTrigger} refreshSpots = {refreshSpots}
+                     flyToLocation={mapTargetLocation}/>
+
+                {isAuthenticated && (
+                    <div style={{position: 'absolute', bottom: '30px', right: '30px', zIndex: 1000}}>
+                        <CreateSpotButton
+                            onClick={handleFabClick}
+                            variant="fab"
+                        />
+                    </div>
+                )}
+
             </div>
 
-            {/*{selectedPhoto && currentSpot &&*/}
-            {/*    <SpotModal open={showModal} onClose={() => setShowModal(false)} photo={selectedPhoto}*/}
-            {/*               spot={currentSpot}/>*/}
-            {/*}*/}
             {showModal && currentSpot && (
                 <SpotModal
                     open={showModal}
@@ -189,6 +255,13 @@ export const MapView = () => {
                     initialPhotoIndex={selectedPhotoIndex}
                 />
             )}
+
+            <CreateSpotModal
+                open={showCreateModal}
+                onClose={() => setShowCreateModal(false)}
+                onSubmit={handleCreateSpot}
+                clickedLocation={newSpotLocation}
+            />
 
 
         </div>
