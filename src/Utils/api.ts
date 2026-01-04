@@ -31,15 +31,20 @@ export const uploadSpotPhoto = async (spotId: number, photoData: UploadPhotoData
     });
 };
 
+// export const fetchSpotsData = async (minLat: number, maxLat: number, minLng: number, maxLng: number): Promise<Spot[]> => {
+//     const response = await axiosClient.get<Spot[]>('/spots/map/search', {
+//         params: {
+//             minLat,
+//             maxLat,
+//             minLng,
+//             maxLng
+//         }
+//     });
+//     return response.data;
+// }
+
 export const fetchSpotsData = async (minLat: number, maxLat: number, minLng: number, maxLng: number): Promise<Spot[]> => {
-    const response = await axiosClient.get<Spot[]>('/spots/map/search', {
-        params: {
-            minLat,
-            maxLat,
-            minLng,
-            maxLng
-        }
-    });
+    const response = await axiosClient.get<Spot[]>('/spots');
     return response.data;
 }
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import './Explore.css';
-import { SpotModal } from '../Map/components/SpotModal';
+import { SpotModal } from '../Spot/SpotModal';
 
 export const Explore = () => {
     const [photos, setPhotos] = useState<any[]>([]);
