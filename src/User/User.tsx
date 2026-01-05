@@ -12,6 +12,7 @@ import type { Comment } from '../Utils/Comment';
 interface FullUserProfile extends UserData {
     id: number;
     email: string;
+    username: string; // Dodano username
     role: number;
     enabled: boolean;
     createdAt: string;
@@ -23,10 +24,12 @@ interface SpotItem {
     img?: string;
 }
 
+// ZMIANA: Dodano spotId
 interface PhotoItem {
     id: number;
     url?: string;
     likes?: number;
+    spotId: number;
 }
 
 type CardItem = SpotItem | PhotoItem;
@@ -62,7 +65,7 @@ const User = () => {
                 const fullProfile = allUsers.find((u) =>
                     (u.email === meData.email) ||
                     (u.email === meData.username) ||
-                    (u.email === meData.username)
+                    (u.username === meData.username)
                 );
 
                 if (fullProfile) {
@@ -71,7 +74,7 @@ const User = () => {
                     setUser(meData as FullUserProfile);
                 }
 
-
+                // --- 1. SPOTY ---
                 try {
                     const sR = await axiosClient.get('/users/me/spots');
                     const rawSpots = sR.data as SpotItem[];
@@ -83,22 +86,20 @@ const User = () => {
                                 return { ...spot, img: photos[0].url };
                             }
                         } catch {
-
-                            console.warn(`Brak zdjęć dla spotu ${spot.id}`);
+                            // Ignorujemy błędy pojedynczych zdjęć
                         }
                         return spot;
                     }));
-
                     setSpots(spotsWithImages);
                 } catch (e) { console.error(e); }
 
-
+                // --- 2. ZDJĘCIA ---
                 try {
                     const pR = await axiosClient.get('/users/me/photos');
                     setPhotos(pR.data as PhotoItem[]);
                 } catch (e) { console.error(e); }
 
-
+                // --- 3. ZAPISANE ---
                 try {
                     const svR = await axiosClient.get('/users/me/saved');
                     const rawSaved = svR.data as SpotItem[];
@@ -110,16 +111,14 @@ const User = () => {
                                 return { ...spot, img: photos[0].url };
                             }
                         } catch {
-
+                            // Ignorujemy błędy
                         }
                         return spot;
                     }));
-
                     setSaved(savedWithImages);
                 } catch (e) { console.error(e); }
 
             } catch (err: unknown) {
-
                 console.error(err);
                 if (typeof err === 'object' && err !== null && 'response' in err) {
                     const axiosError = err as { response: { status: number } };
@@ -138,6 +137,7 @@ const User = () => {
 
     const handleUpdateProfile = async (updatedData: Partial<UserData>) => {
         try {
+            // Używamy PUT, żeby ominąć problemy z CORS przy PATCH
             const response = await axiosClient.put('/users/me', updatedData);
             setUser(prev => prev ? { ...prev, ...response.data } : null);
         } catch (err) {
@@ -201,14 +201,22 @@ const User = () => {
         let imageUrl: string | undefined;
         let titleText: string = 'Photo';
 
+        // Zmień port jeśli masz inny
+        const BACKEND_URL = 'http://localhost:8080';
+
         if (type === 'spot') {
             const spot = item as SpotItem;
-            imageUrl = spot.img;
             titleText = spot.title;
+            // Poprawa ścieżek
+            if (spot.img) {
+                imageUrl = spot.img.startsWith('/') ? `${BACKEND_URL}${spot.img}` : spot.img;
+            }
         } else {
             const photo = item as PhotoItem;
-            imageUrl = photo.url;
             titleText = 'Zdjęcie';
+            if (photo.url) {
+                imageUrl = photo.url.startsWith('/') ? `${BACKEND_URL}${photo.url}` : photo.url;
+            }
         }
 
         const hasImage = imageUrl && imageUrl.trim() !== "";
@@ -218,9 +226,19 @@ const User = () => {
                 key={item.id}
                 className={`media-card ${type}-card`}
                 onClick={() => {
-                    if (type === 'spot') handleOpenSpot(item.id);
+                    if (type === 'spot') {
+                        handleOpenSpot(item.id);
+                    } else {
+                        // OBSŁUGA KLIKNIĘCIA W ZDJĘCIE
+                        const photo = item as PhotoItem;
+                        if (photo.spotId) {
+                            handleOpenSpot(photo.spotId);
+                        } else {
+                            console.warn("Brak spotId w zdjęciu (sprawdź backend PhotoService)");
+                        }
+                    }
                 }}
-                style={{ cursor: type === 'spot' ? 'pointer' : 'default' }}
+                style={{ cursor: 'pointer' }}
             >
                 <div className="card-media-wrapper">
                     {hasImage ? (
