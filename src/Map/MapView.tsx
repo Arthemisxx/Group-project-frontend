@@ -176,8 +176,7 @@ export const MapView = () => {
                                                              }}/>
                                                         <div className={"photo-info-wrapper"}>
                                                             <p className={"caption"}>{photo.caption}</p>
-                                                            {/*<p className={"author"}>{photo.author.displayName}</p>*/}
-                                                            <p className={"author"}><FaRegUser/> Julia Staniszewska</p>
+                                                            <p className={"author"}><FaRegUser/> {photo.author.displayName}</p>
                                                         </div>
 
                                                     </div>
