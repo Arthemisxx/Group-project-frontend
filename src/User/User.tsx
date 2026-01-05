@@ -12,7 +12,7 @@ import type { Comment } from '../Utils/Comment';
 interface FullUserProfile extends UserData {
     id: number;
     email: string;
-    username: string; // Dodano username
+    username: string;
     role: number;
     enabled: boolean;
     createdAt: string;
@@ -24,7 +24,7 @@ interface SpotItem {
     img?: string;
 }
 
-// ZMIANA: Dodano spotId
+
 interface PhotoItem {
     id: number;
     url?: string;
@@ -74,7 +74,7 @@ const User = () => {
                     setUser(meData as FullUserProfile);
                 }
 
-                // --- 1. SPOTY ---
+
                 try {
                     const sR = await axiosClient.get('/users/me/spots');
                     const rawSpots = sR.data as SpotItem[];
@@ -86,20 +86,20 @@ const User = () => {
                                 return { ...spot, img: photos[0].url };
                             }
                         } catch {
-                            // Ignorujemy błędy pojedynczych zdjęć
+
                         }
                         return spot;
                     }));
                     setSpots(spotsWithImages);
                 } catch (e) { console.error(e); }
 
-                // --- 2. ZDJĘCIA ---
+
                 try {
                     const pR = await axiosClient.get('/users/me/photos');
                     setPhotos(pR.data as PhotoItem[]);
                 } catch (e) { console.error(e); }
 
-                // --- 3. ZAPISANE ---
+
                 try {
                     const svR = await axiosClient.get('/users/me/saved');
                     const rawSaved = svR.data as SpotItem[];
@@ -111,7 +111,7 @@ const User = () => {
                                 return { ...spot, img: photos[0].url };
                             }
                         } catch {
-                            // Ignorujemy błędy
+
                         }
                         return spot;
                     }));
@@ -137,7 +137,7 @@ const User = () => {
 
     const handleUpdateProfile = async (updatedData: Partial<UserData>) => {
         try {
-            // Używamy PUT, żeby ominąć problemy z CORS przy PATCH
+
             const response = await axiosClient.put('/users/me', updatedData);
             setUser(prev => prev ? { ...prev, ...response.data } : null);
         } catch (err) {
@@ -201,13 +201,13 @@ const User = () => {
         let imageUrl: string | undefined;
         let titleText: string = 'Photo';
 
-        // Zmień port jeśli masz inny
+
         const BACKEND_URL = 'http://localhost:8080';
 
         if (type === 'spot') {
             const spot = item as SpotItem;
             titleText = spot.title;
-            // Poprawa ścieżek
+
             if (spot.img) {
                 imageUrl = spot.img.startsWith('/') ? `${BACKEND_URL}${spot.img}` : spot.img;
             }
