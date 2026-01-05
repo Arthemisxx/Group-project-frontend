@@ -42,16 +42,12 @@ export const MapView = () => {
 
     function handlePhotosDataFromMap(photos: Photo[]) {
         setCurrentSpotPhotos(photos ?? [])
-        photos?.map(p => {
-            console.log(p)
-        })
+
     }
 
     function handleCommentsDataFromMap(comments: Comment[]) {
         setCurrentSpotComments(comments ?? [])
-        comments?.map(p => {
-            console.log(p)
-        })
+
     }
 
     const sliderSettings = {

@@ -11,6 +11,10 @@ import type {Comment} from "../Utils/Comment.ts";
 import {AddPhotoButton} from "./Photos/AddPhotoButton.tsx";
 import {AddPhotoModal} from "./Photos/AddPhotoModal.tsx";
 import {fetchSpotPhotos} from "../Utils/api.ts";
+import {EditSpotButton} from "./EditSpotButton.tsx";
+import {EditSpotModal} from "./EditSpotModal.tsx";
+import {useAuth} from "../Auth/AuthProvider.tsx";
+import { jwtDecode } from "jwt-decode";
 
 interface ModalProps {
     onClose: () => void;
@@ -56,13 +60,40 @@ export const SpotModal = ({ open, onClose, spot, photos, comments, onAddComment,
     const [newComment, setNewComment] = useState("");
     const [showAddPhotoModal, setShowAddPhotoModal] = useState(false);
     const [spotPhotos, setSpotPhotos] = useState<Photo[]>(photos)
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [currentSpot, setCurrentSpot] = useState(spot);
+    const {token} = useAuth();
+    const [isOwner, setIsOwner] = useState(false);
 
     useEffect(() => {
         if (open) {
             setSpotPhotos(photos);
             setActiveSlide(initialPhotoIndex);
+            setCurrentSpot(spot);
+
+            if (token && spot.author) {
+                try {
+                    const decoded: any = jwtDecode(token);
+                    const currentUserId = decoded.id || decoded.sub || decoded.userId;
+
+                    console.log("Token ID:", currentUserId, "Type:", typeof currentUserId);
+                    console.log("Spot Author ID:", spot.author.id, "Type:", typeof spot.author.id);
+                    console.log("Token: ", decoded)
+
+                    if (currentUserId && String(currentUserId) === String(spot.author.id)) {
+                        setIsOwner(true);
+                    } else {
+                        setIsOwner(false);
+                    }
+                } catch (error) {
+                    console.error("Błąd dekodowania tokena:", error);
+                    setIsOwner(false);
+                }
+            } else {
+                setIsOwner(false);
+            }
         }
-    }, [photos, open, initialPhotoIndex]);
+    }, [photos, open, initialPhotoIndex, spot, token]);
 
     const handleRefreshPhotos = async () => {
         try {
@@ -131,12 +162,23 @@ export const SpotModal = ({ open, onClose, spot, photos, comments, onAddComment,
                 </div>
 
                 <div className="modal-info">
-
                     <div className="spot-header-section">
-                        <h2 className="spot-title">{spot.title}</h2>
+                        <div style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            paddingBottom: '10px',
+                            justifyContent: 'space-between',
+                            alignItems: 'flex-start',
+                            gap: '10px'
+                        }}>
+                            <h2 className="spot-title">{currentSpot.title}</h2>
+                            {isOwner && (
+                                <EditSpotButton onClick={() => setShowEditModal(true)} />
+                            )}
+                        </div>
                         <div className="section">
                             <p className="label">O miejscu</p>
-                            <p className="spot-description">{spot.description}</p>
+                            <p className="spot-description">{currentSpot.description}</p>
                         </div>
                     </div>
 
@@ -221,7 +263,6 @@ export const SpotModal = ({ open, onClose, spot, photos, comments, onAddComment,
             </div>
 
 
-            {(
                 <AddPhotoModal
                     open={showAddPhotoModal}
                     onClose={() => setShowAddPhotoModal(false)}
@@ -230,7 +271,15 @@ export const SpotModal = ({ open, onClose, spot, photos, comments, onAddComment,
                         handleRefreshPhotos();
                     }}
                 />
-            )}
+
+            <EditSpotModal
+                open={showEditModal}
+                onClose={() => setShowEditModal(false)}
+                spot={currentSpot}
+                photos={spotPhotos}
+                onSpotUpdated={(updated) => setCurrentSpot(updated)}
+                onPhotosUpdated={handleRefreshPhotos}
+            />
         </div>
 
 

@@ -1,6 +1,6 @@
 import axiosClient from "./../Auth/axiosClient.ts"
 
-import type {Spot, SpotCreate} from "./Spot.ts";
+import type {Spot, SpotCreate, SpotUpdate} from "./Spot.ts";
 import type {Photo} from "./Photo.ts";
 import type {Comment} from "./Comment.ts";
 import type {PostComment} from "./postComment.ts";
@@ -69,5 +69,14 @@ export const insertSpot = async (spot: SpotCreate): Promise<Spot> => {
     const response = await axiosClient.post<Spot>('/spots', spot);
     return response.data;
 };
+
+export const updateSpot = async (spot: SpotUpdate, id:number): Promise<Spot> => {
+    const response = await axiosClient.put<Spot>(`/spots/${id}`, spot);
+    return response.data;
+}
+
+export const deletePhoto = async (id: number): Promise<void> => {
+    await axiosClient.delete(`photos/${id}`);
+}
 
 
