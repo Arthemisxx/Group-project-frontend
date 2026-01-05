@@ -74,7 +74,7 @@ export const SpotModal = ({ open, onClose, spot, photos, comments, onAddComment,
             if (token && spot.author) {
                 try {
                     const decoded: any = jwtDecode(token);
-                    const currentUserId = decoded.id || decoded.sub || decoded.userId;
+                    const currentUserId = decoded.userId;
 
                     console.log("Token ID:", currentUserId, "Type:", typeof currentUserId);
                     console.log("Spot Author ID:", spot.author.id, "Type:", typeof spot.author.id);
@@ -173,9 +173,9 @@ export const SpotModal = ({ open, onClose, spot, photos, comments, onAddComment,
                         }}>
                             <h2 className="spot-title">{currentSpot.title}</h2>
                             {/* TODO odkomentować jak zmienią token na backendzie */}
-                            {/*{isOwner && (*/}
+                            {isOwner && (
                                 <EditSpotButton onClick={() => setShowEditModal(true)} />
-                            {/*)}*/}
+                            )}
                         </div>
                         <div className="section">
                             <p className="label">O miejscu</p>
