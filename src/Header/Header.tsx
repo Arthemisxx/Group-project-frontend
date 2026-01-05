@@ -1,24 +1,20 @@
-import { useState } from "react";
+// import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./Header.css";
-import LoginModal from "../Login/LoginModal";
-import RegisterModal from "../Register/RegisterModal";
-import VerificationModal from "../Register/VerificationModal";
 import {useAuth} from "../Auth/AuthProvider.tsx";
 import {FaUser} from "react-icons/fa";
+import {LoginButton} from "../Login/LoginButton.tsx";
 
 export default function Header() {
     const navigate = useNavigate();
-    const [isLoginOpen, setIsLoginOpen] = useState(false);
+    // const [isLoginOpen, setIsLoginOpen] = useState(false);
     const { isAuthenticated, logout } = useAuth();
-    const [isRegisterOpen, setIsRegisterOpen] = useState(false);
-    const [isVerifyOpen, setIsVerifyOpen] = useState(false);
-    const [emailToVerify, setEmailToVerify] = useState("");
 
     const handleLogout = () => {
         logout();
         navigate("/");
     };
+
     return (
         <>
             <div className="header-wrapper">
@@ -38,14 +34,13 @@ export default function Header() {
                         {isAuthenticated ? (
 
                             <div style={{display: "flex", alignItems: "center", gap: "10px"}}>
-                                {/* Ikonka profilu */}
+
                                 <Link to="/uzytkownik">
                                     <button className="btn-login">
                                         <FaUser/>
                                     </button>
                                 </Link>
 
-                                {/* WYLOGUJ */}
                                 <button
                                     className="btn-login"
                                     onClick={handleLogout}
@@ -56,53 +51,12 @@ export default function Header() {
                             </div>
 
                         ) : (
-
-                            <button
-                                className="btn-login"
-                                onClick={() => setIsLoginOpen(true)}
-                            >
-                                Zaloguj Się
-                            </button>
+                            <LoginButton/>
                         )}
 
                     </div>
                 </div>
             </div>
-
-            <LoginModal
-                isOpen={isLoginOpen}
-                onClose={() => setIsLoginOpen(false)}
-                onSwitchToRegister={() => {
-                    setIsLoginOpen(false);
-                    setIsRegisterOpen(true);
-                }}
-            />
-
-            <RegisterModal
-                isOpen={isRegisterOpen}
-                onClose={() => setIsRegisterOpen(false)}
-                onSwitchToLogin={() => {
-                    setIsRegisterOpen(false);
-                    setIsLoginOpen(true);
-                }}
-                onRegisterSuccess={(email) => {
-
-                    setEmailToVerify(email);
-                    setIsRegisterOpen(false);
-                    setIsVerifyOpen(true);
-                }}
-            />
-
-
-            <VerificationModal
-                isOpen={isVerifyOpen}
-                onClose={() => setIsVerifyOpen(false)}
-                email={emailToVerify}
-                onVerified={() => {
-                    setIsVerifyOpen(false);
-                    setIsLoginOpen(true); //
-                }}
-            />
         </>
     );
 }

@@ -8,6 +8,13 @@ import "slick-carousel/slick/slick-theme.css";
 import { useState, useEffect } from "react";
 import {FaChevronLeft, FaChevronRight, FaPaperPlane, FaUserCircle} from "react-icons/fa";
 import type {Comment} from "../Utils/Comment.ts";
+import {AddPhotoButton} from "./Photos/AddPhotoButton.tsx";
+import {AddPhotoModal} from "./Photos/AddPhotoModal.tsx";
+import {fetchSpotPhotos} from "../Utils/api.ts";
+import {EditSpotButton} from "./EditSpotButton.tsx";
+import {EditSpotModal} from "./EditSpotModal.tsx";
+import {useAuth} from "../Auth/AuthProvider.tsx";
+import { jwtDecode } from "jwt-decode";
 
 interface ModalProps {
     onClose: () => void;
@@ -16,8 +23,10 @@ interface ModalProps {
     photos: Photo[];
     comments: Comment[];
     onAddComment: (content: string) => void;
-    initialPhotoIndex?: number; // Opcjonalnie: indeks zdjęcia, w które kliknięto
+    initialPhotoIndex?: number;
 }
+
+
 
 function getPhotoUrl(url: string): string {
     if (url.includes("drive.google.com")) {
@@ -49,12 +58,53 @@ const PrevArrow = (props: any) => {
 export const SpotModal = ({ open, onClose, spot, photos, comments, onAddComment, initialPhotoIndex = 0 }: ModalProps) => {
     const [activeSlide, setActiveSlide] = useState(initialPhotoIndex);
     const [newComment, setNewComment] = useState("");
+    const [showAddPhotoModal, setShowAddPhotoModal] = useState(false);
+    const [spotPhotos, setSpotPhotos] = useState<Photo[]>(photos)
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [currentSpot, setCurrentSpot] = useState(spot);
+    const {token} = useAuth();
+    const [isOwner, setIsOwner] = useState(false);
 
     useEffect(() => {
         if (open) {
+            setSpotPhotos(photos);
             setActiveSlide(initialPhotoIndex);
+            setCurrentSpot(spot);
+
+            if (token && spot.author) {
+                try {
+                    const decoded: any = jwtDecode(token);
+                    const currentUserId = decoded.id || decoded.sub || decoded.userId;
+
+                    console.log("Token ID:", currentUserId, "Type:", typeof currentUserId);
+                    console.log("Spot Author ID:", spot.author.id, "Type:", typeof spot.author.id);
+                    console.log("Token: ", decoded)
+
+                    if (currentUserId && String(currentUserId) === String(spot.author.id)) {
+                        setIsOwner(true);
+                    } else {
+                        setIsOwner(false);
+                    }
+                } catch (error) {
+                    console.error("Błąd dekodowania tokena:", error);
+                    setIsOwner(false);
+                }
+            } else {
+                setIsOwner(false);
+            }
         }
-    }, [open, initialPhotoIndex]);
+    }, [photos, open, initialPhotoIndex, spot, token]);
+
+    const handleRefreshPhotos = async () => {
+        try {
+            const response = await fetchSpotPhotos(spot.id);
+            if (response) {
+                setSpotPhotos(response as Photo[]);
+            }
+        } catch (error) {
+            console.error("Błąd odświeżania zdjęć:", error);
+        }
+    }
 
     const handleSendComment = () => {
         if (newComment.trim().length > 0) {
@@ -67,7 +117,7 @@ export const SpotModal = ({ open, onClose, spot, photos, comments, onAddComment,
 
     const settings = {
         dots: true,
-        infinite: photos.length > 1,
+        infinite: spotPhotos.length > 1,
         speed: 500,
         slidesToShow: 1,
         slidesToScroll: 1,
@@ -78,16 +128,21 @@ export const SpotModal = ({ open, onClose, spot, photos, comments, onAddComment,
         adaptiveHeight: false,
     };
 
-    const currentPhoto = photos[activeSlide];
+    const currentPhoto = spotPhotos[activeSlide];
 
     return (
         <div className="modal display-block" onClick={onClose}>
             <div className="modal-wrapper" onClick={(e) => e.stopPropagation()}>
 
                 <div className="modal-photo-wrapper">
-                    {photos.length > 0 ? (
+                    {spotPhotos.length > 0 && (
+                        <div style={{ position: 'absolute', top: '15px', right: '15px', zIndex: 20 }}>
+                            <AddPhotoButton onClick={() => setShowAddPhotoModal(true)} />
+                        </div>
+                    )}
+                    {spotPhotos.length > 0 ? (
                         <Slider {...settings} className="modal-slider">
-                            {photos.map((photo) => (
+                            {spotPhotos.map((photo) => (
                                 <div key={photo.id} className="modal-slide-container">
                                     <img
                                         src={getPhotoUrl(photo.url)}
@@ -98,18 +153,33 @@ export const SpotModal = ({ open, onClose, spot, photos, comments, onAddComment,
                             ))}
                         </Slider>
                     ) : (
-                        <div className="no-photos-placeholder">Brak zdjęć</div>
-                        //TODO dodaj zdjęcie przycisk
+                        <div className="no-photos-placeholder">
+                            <div style={{marginTop: '15px'}}>
+                                <AddPhotoButton onClick={() => setShowAddPhotoModal(true)} className={"add-photo-button-modal"}/>
+                            </div>
+                        </div>
                     )}
                 </div>
 
                 <div className="modal-info">
-
                     <div className="spot-header-section">
-                        <h2 className="spot-title">{spot.title}</h2>
+                        <div style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            paddingBottom: '10px',
+                            justifyContent: 'space-between',
+                            alignItems: 'flex-start',
+                            gap: '10px'
+                        }}>
+                            <h2 className="spot-title">{currentSpot.title}</h2>
+                            //TODO odkomentować jak zmienią token na backendzie
+                            {/*{isOwner && (*/}
+                                <EditSpotButton onClick={() => setShowEditModal(true)} />
+                            {/*)}*/}
+                        </div>
                         <div className="section">
                             <p className="label">O miejscu</p>
-                            <p className="spot-description">{spot.description}</p>
+                            <p className="spot-description">{currentSpot.description}</p>
                         </div>
                     </div>
 
@@ -118,7 +188,7 @@ export const SpotModal = ({ open, onClose, spot, photos, comments, onAddComment,
                     {currentPhoto && (
                         <div className="photo-details-section">
                             <div className="photo-counter">
-                                Zdjęcie {activeSlide + 1} z {photos.length}
+                                Zdjęcie {activeSlide + 1} z {spotPhotos.length}
                             </div>
 
                             <div className="section">
@@ -192,6 +262,27 @@ export const SpotModal = ({ open, onClose, spot, photos, comments, onAddComment,
 
                 <button onClick={onClose} className="modal-close-icon">✕</button>
             </div>
+
+
+                <AddPhotoModal
+                    open={showAddPhotoModal}
+                    onClose={() => setShowAddPhotoModal(false)}
+                    spotId={spot.id}
+                    onUploadSuccess={() => {
+                        handleRefreshPhotos();
+                    }}
+                />
+
+            <EditSpotModal
+                open={showEditModal}
+                onClose={() => setShowEditModal(false)}
+                spot={currentSpot}
+                photos={spotPhotos}
+                onSpotUpdated={(updated) => setCurrentSpot(updated)}
+                onPhotosUpdated={handleRefreshPhotos}
+            />
         </div>
+
+
     );
 };

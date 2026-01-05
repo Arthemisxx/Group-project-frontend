@@ -1,87 +1,112 @@
-.modal-overlay {
+.register-modal-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    inset: 0;
     background-color: rgba(0, 0, 0, 0.6);
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000;
-    backdrop-filter: blur(2px);
+    z-index: 99999;
+    backdrop-filter: blur(5px);
+    animation: fadeIn 0.2s ease-in-out;
 }
 
-.modal-content {
+.register-modal-content {
     background: white;
-    padding: 2rem;
-    border-radius: 12px;
+    padding: 2.5rem;
+    border-radius: 16px;
     width: 90%;
     max-width: 400px;
     position: relative;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    display: flex;
+    flex-direction: column;
 }
 
-.modal-close {
+.register-modal-close {
     position: absolute;
-    top: 10px;
+    top: 15px;
     right: 15px;
     background: none;
     border: none;
-    font-size: 1.5rem;
+    font-size: 2rem;
+    line-height: 1;
     cursor: pointer;
-    color: #666;
+    color: #888;
+    transition: color 0.2s;
 }
 
-h2 {
+.register-modal-close:hover {
+    color: #000;
+}
+
+.register-modal-content h2 {
     text-align: center;
     margin-bottom: 1.5rem;
     color: #333;
+    font-size: 1.5rem;
+    margin-top: 0;
 }
 
-form {
+.register-modal-content form {
     display: flex;
     flex-direction: column;
     gap: 15px;
 }
 
-input {
-    padding: 12px;
+.register-input {
+    padding: 12px 16px;
     border: 1px solid #ddd;
-    border-radius: 6px;
+    border-radius: 8px;
     font-size: 1rem;
+    background-color: #fafafa;
+    transition: all 0.2s;
 }
 
-input:focus {
+.register-input:focus {
     outline: none;
     border-color: #28a745;
+    background-color: #fff;
+    box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
 }
 
-.btn-submit {
+.register-btn-submit {
     padding: 12px;
     background-color: #28a745;
     color: white;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     font-size: 1rem;
     cursor: pointer;
-    font-weight: bold;
+    font-weight: 600;
+    margin-top: 10px;
+    transition: background-color 0.2s;
 }
 
-.btn-submit:hover {
+.register-btn-submit:hover {
     background-color: #218838;
 }
 
-.signup-link {
+.register-link {
     text-align: center;
-    margin-top: 15px;
+    margin-top: 20px;
     font-size: 0.9rem;
     color: #666;
 }
 
-.signup-link span {
-    color: #007bff;
+.register-link span {
+    color: #28a745;
     cursor: pointer;
-    text-decoration: underline;
+    text-decoration: none;
+    font-weight: 600;
     margin-left: 5px;
+    transition: text-decoration 0.2s;
+}
+
+.register-link span:hover {
+    text-decoration: underline;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
 }

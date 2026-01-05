@@ -1,10 +1,8 @@
-
-/* Tło modala */
 .modal {
     position: fixed;
     inset: 0;
     backdrop-filter: blur(8px);
-    background: rgba(0, 0, 0, 0.8); /* Nieco ciemniejsze tło dla lepszego kontrastu */
+    background: rgba(0, 0, 0, 0.8);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -13,39 +11,34 @@
     animation: fadeIn 0.3s ease;
 }
 
-/* Główna karta */
 .modal-wrapper {
     display: flex;
     background: #fff;
     width: 100%;
     max-width: 1100px;
-    height: 85vh; /* Stała wysokość względem okna */
+    height: 85vh;
     border-radius: 16px;
     box-shadow: 0 10px 40px rgba(0,0,0,0.3);
     overflow: hidden;
     position: relative;
 }
 
-/* === LEWA STRONA - Wrapper Slidera === */
 .modal-photo-wrapper {
-    flex: 1.4; /* Zajmuje więcej miejsca niż info */
-    background: #000; /* Czarne tło pod zdjęciami */
+    flex: 1.4;
+    background: #000;
     position: relative;
     overflow: hidden;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    /* Kluczowe: min-height zapobiega zapadaniu się w rzadkich przypadkach */
     min-height: 0;
 }
 
-/* === NAPRAWA REACT SLICK (Kluczowa sekcja) === */
 .modal-slider {
     width: 100%;
     height: 100%;
 }
 
-/* Wymuszamy wysokość na wszystkich wewnętrznych kontenerach slicka */
 .modal-slider .slick-list,
 .modal-slider .slick-track,
 .modal-slider .slick-slide,
@@ -53,27 +46,24 @@
     height: 100%;
 }
 
-/* Kontener pojedynczego slajdu - centruje zdjęcie */
 .modal-slide-container {
     height: 100%;
     width: 100%;
-    display: flex !important; /* Slick nadpisuje display, więc !important */
+    display: flex !important;
     justify-content: center;
     align-items: center;
     outline: none;
 }
 
-/* Samo zdjęcie */
 .modal-photo {
     max-width: 100%;
     max-height: 100%;
     width: auto;
     height: auto;
-    object-fit: contain; /* Zdjęcie dopasuje się bez ucinania */
+    object-fit: contain;
     display: block;
 }
 
-/* Strzałki slidera w modalu */
 .modal-arrow {
     position: absolute;
     top: 50%;
@@ -99,7 +89,6 @@
 .modal-arrow.prev { left: 15px; }
 .modal-arrow.next { right: 15px; }
 
-/* Dostosowanie kropek (dots) slidera */
 .modal-slider .slick-dots {
     bottom: 15px;
 }
@@ -114,7 +103,6 @@
 }
 
 
-/* === PRAWA STRONA - Info === */
 .modal-info {
     flex: 0.8;
     padding: 30px;
@@ -127,7 +115,7 @@
 
 .spot-title {
     margin-top: 0;
-    margin-bottom: 15px;
+    margin-bottom: 0;
     font-size: 26px;
     font-weight: 700;
     color: #222;
@@ -172,7 +160,6 @@
     color: #333;
 }
 
-/* Przycisk Google Maps */
 .google-btn-wrapper {
     margin-top: auto;
     padding-top: 20px;
@@ -180,7 +167,6 @@
     justify-content: flex-end;
 }
 
-/* === SEKCJA KOMENTARZY W MODALU === */
 
 .modal-comments-section {
     margin-top: 10px;
@@ -201,7 +187,6 @@
     color: #333;
 }
 
-/* Lista scrollowana */
 .modal-comments-list {
     flex-grow: 1;
     overflow-y: auto;
@@ -219,7 +204,6 @@
     border-radius: 10px;
 }
 
-/* Pojedynczy komentarz */
 .modal-comment {
     display: flex;
     gap: 10px;
@@ -281,9 +265,10 @@
     color: #595959;
     font-weight: bold;
     text-align: center;
+    display: flex;
+    justify-content: center;
 }
 
-/* Formularz dodawania */
 .add-comment-wrapper {
     display: flex;
     gap: 10px;
@@ -333,7 +318,6 @@
 }
 
 
-/* Ikona zamknięcia X */
 .modal-close-icon {
     position: absolute;
     top: 15px;
@@ -360,13 +344,11 @@
     color: white;
 }
 
-/* Animacja */
 @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
 }
 
-/* RWD - Responsywność */
 @media (max-width: 900px) {
     .modal-wrapper {
         flex-direction: column;
@@ -376,7 +358,7 @@
 
     .modal-photo-wrapper {
         flex: none;
-        height: 40vh; /* Na mobilce zdjęcia mają stałą wysokość */
+        height: 40vh;
     }
 
     .modal-info {

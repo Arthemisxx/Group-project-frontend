@@ -15,12 +15,16 @@ import {insertComment, insertSpot, uploadSpotPhoto} from "../Utils/api.ts";
 import {useAuth} from "../Auth/AuthProvider.tsx";
 import {CreateSpotButton} from "../Spot/CreateSpotButton.tsx";
 import {CreateSpotModal, type PhotoDraft} from "../Spot/CreateSpotModal.tsx";
+import {AddPhotoButton} from "../Spot/Photos/AddPhotoButton.tsx";
+import {AddPhotoModal} from "../Spot/Photos/AddPhotoModal.tsx";
+import {LoginButton} from "../Login/LoginButton.tsx";
 
 export const MapView = () => {
     const [currentSpot, setCurrentSpot] = useState<Spot | null>(null)
     const [currentSpotPhotos, setCurrentSpotPhotos] = useState<Photo[]>([])
     const [currentSpotComments, setCurrentSpotComments] = useState<Comment[]>([])
     const [showModal, setShowModal] = useState<boolean>(false);
+    const [showAddPhotoModal, setShowAddPhotoModal] = useState(false);
     const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number>(0);
     const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
     const [refreshSpots, setRefreshSpots] = useState<number>(0)
@@ -32,23 +36,18 @@ export const MapView = () => {
     const [newSpotLocation, setNewSpotLocation] = useState<{ lat: number, lng: number } | null>(null);
 
 
-
     function handleSpotDataFromMap(spot: Spot | null) {
         setCurrentSpot(spot)
     }
 
     function handlePhotosDataFromMap(photos: Photo[]) {
         setCurrentSpotPhotos(photos ?? [])
-        photos?.map(p => {
-            console.log(p)
-        })
+
     }
 
     function handleCommentsDataFromMap(comments: Comment[]) {
         setCurrentSpotComments(comments ?? [])
-        comments?.map(p => {
-            console.log(p)
-        })
+
     }
 
     const sliderSettings = {
@@ -95,7 +94,7 @@ export const MapView = () => {
             console.log("Tworzenie spota...");
 
             const createdSpot = await insertSpot(data);
-            const newSpotId = createdSpot.id; // Zakładam, że backend zwraca utworzony obiekt z ID
+            const newSpotId = createdSpot.id;
 
             console.log(`Spot utworzony (ID: ${newSpotId}).`);
 
@@ -151,6 +150,20 @@ export const MapView = () => {
                         <div className={"photos-info-wrapper"}>
                             <div className={"slider-container"}>
                                 {currentSpotPhotos.length > 0 ? (
+                                    <>
+                                    {isAuthenticated && (
+                                        <div style={{
+                                            position: 'absolute',
+                                            top: '10px',
+                                            right: '10px',
+                                            zIndex: 10
+                                        }}>
+                                            <AddPhotoButton
+                                                onClick={() => setShowAddPhotoModal(true)}
+                                                className="mini-btn"
+                                            />
+                                        </div>
+                                    )}
                                         <Slider {...sliderSettings}>
                                             {currentSpotPhotos?.map((photo, index) => (
                                                 <div className={"current-photo-wrapper"}>
@@ -172,16 +185,23 @@ export const MapView = () => {
                                                 </div>
                                             ))}
                                         </Slider>
+                                    </>
                                     ) :
                                     (
                                         <div className="no-photos">
                                             {isAuthenticated ? (
-                                                    <><h2>Nikt jeszcze nie dodał zdjęcia</h2><p>Chcesz być pierwszy?</p></>
-                                                //TODO dodawanie zdjęć przycisk
+                                                    <>
+                                                        <h2>Nikt jeszcze nie dodał zdjęcia</h2><p>Chcesz być
+                                                        pierwszy?</p>
+                                                        <div style={{marginTop: '15px'}}>
+                                                            <AddPhotoButton onClick={() => setShowAddPhotoModal(true)}/>
+                                                        </div>
+                                                    </>
                                                 ) :
                                                 (
-                                                    <><h2>Nikt jeszcze nie dodał zdjęcia</h2><p>Chcesz być pierwszy?</p>
-                                                        <button className="btn-login">Zaloguj Się</button>
+                                                    <>
+                                                        <h2>Nikt jeszcze nie dodał zdjęcia</h2><p>Chcesz być pierwszy?</p>
+                                                        <LoginButton/>
                                                     </>
                                                 )}
 
@@ -230,7 +250,8 @@ export const MapView = () => {
             </div>
             <div className={`map-view ${currentSpot ? "with-spot" : "no-spot"}`}>
                 <Map sendSpotDataToMapView={handleSpotDataFromMap} sendPhotosDataToMapView={handlePhotosDataFromMap}
-                     sendCommentsDataToMapView={handleCommentsDataFromMap} refreshTrigger={refreshTrigger} refreshSpots = {refreshSpots}
+                     sendCommentsDataToMapView={handleCommentsDataFromMap} refreshTrigger={refreshTrigger}
+                     refreshSpots={refreshSpots}
                      flyToLocation={mapTargetLocation}/>
 
                 {isAuthenticated && (
@@ -262,6 +283,17 @@ export const MapView = () => {
                 onSubmit={handleCreateSpot}
                 clickedLocation={newSpotLocation}
             />
+
+            {currentSpot && (
+                <AddPhotoModal
+                    open={showAddPhotoModal}
+                    onClose={() => setShowAddPhotoModal(false)}
+                    spotId={currentSpot.id}
+                    onUploadSuccess={() => {
+                        setRefreshTrigger(prev => prev + 1);
+                    }}
+                />
+            )}
 
 
         </div>

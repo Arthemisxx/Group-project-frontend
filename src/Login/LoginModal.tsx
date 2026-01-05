@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./LoginModal.css";
+import ReactDOM from "react-dom";
 import axiosClient from "../Auth/axiosClient.ts";
 import {useAuth} from "../Auth/AuthProvider.tsx";
 import {useNavigate} from "react-router-dom";
@@ -42,10 +43,10 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }: Logi
 
     if (!isOpen) return null;
 
-    return (
-        <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                <button className="modal-close" onClick={onClose}>×</button>
+    return ReactDOM.createPortal(
+        <div className="login-modal-overlay" onClick={onClose}>
+            <div className="login-modal-content" onClick={(e) => e.stopPropagation()}>
+                <button className="login-modal-close" onClick={onClose}>×</button>
 
                 <h2>Zaloguj się</h2>
 
@@ -64,7 +65,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }: Logi
                         onChange={(e)=> setPassword(e.target.value)}
                         required
                     />
-                    <button type="submit" className="btn-submit">Zaloguj</button>
+                    <button type="submit" className="login-btn-submit">Zaloguj</button>
                 </form>
 
                 <p className="signup-link">
@@ -74,17 +75,13 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }: Logi
                             onClose();
                             onSwitchToRegister();
                         }}
-                        style={{
-                            cursor: "pointer",
-                            color: "#007bff",
-                            textDecoration: "underline",
-                            marginLeft: "5px"
-                        }}
+
                     >
                     Zarejestruj się
                     </span>
                 </p>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }

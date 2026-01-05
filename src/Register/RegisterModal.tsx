@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import "./RegisterModal.css";
 import axiosClient from "../Auth/axiosClient.ts";
+import {createPortal} from "react-dom";
 
 interface RegisterModalProps {
     isOpen: boolean;
@@ -32,10 +33,10 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin, onRegi
 
     if (!isOpen) return null;
 
-    return (
-        <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                <button className="modal-close" onClick={onClose}>×</button>
+    return createPortal(
+        <div className="register-modal-overlay" onClick={onClose}>
+            <div className="register-modal-content" onClick={(e) => e.stopPropagation()}>
+                <button className="register-modal-close" onClick={onClose}>×</button>
 
                 <h2>Załóż konto</h2>
 
@@ -46,6 +47,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin, onRegi
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
                         required
+                        className="register-input"
                     />
                     <input
                         type="email"
@@ -53,6 +55,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin, onRegi
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
+                        className="register-input"
                     />
                     <input
                         type="password"
@@ -61,11 +64,12 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin, onRegi
                         onChange={(e) => setPassword(e.target.value)}
                         required
                         minLength={6}
+                        className="register-input"
                     />
-                    <button type="submit" className="btn-submit">Zarejestruj się</button>
+                    <button type="submit" className="register-btn-submit">Zarejestruj się</button>
                 </form>
 
-                <p className="signup-link">
+                <p className="register-link">
                     Masz już konto?
                     <span onClick={() => {
                         onClose();
@@ -75,6 +79,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin, onRegi
                     </span>
                 </p>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }
