@@ -1,7 +1,8 @@
 import './MapView.css';
 import {Map} from "./components/Map.tsx"
 import {GoogleButton} from "./components/GoogleButton.tsx";
-import {useState} from "react";
+import {useState, useEffect} from "react";
+import {useSearchParams} from 'react-router-dom';
 import type {Spot, SpotCreate} from "../Utils/Spot.ts";
 import type {Photo} from "../Utils/Photo.ts";
 import Slider from "react-slick";
@@ -35,6 +36,43 @@ export const MapView = () => {
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [newSpotLocation, setNewSpotLocation] = useState<{ lat: number, lng: number } | null>(null);
 
+    // NOWE - obsługa wyszukiwania z URL
+    const [searchParams] = useSearchParams();
+    const [searchedLocation, setSearchedLocation] = useState<string>('');
+
+    // Odbierz parametr search z URL
+    useEffect(() => {
+        const searchQuery = searchParams.get('search');
+        if (searchQuery) {
+            console.log('Przyszło wyszukiwanie:', searchQuery);
+            setSearchedLocation(searchQuery);
+            searchLocationOnMap(searchQuery);
+        }
+    }, [searchParams]);
+
+    // Funkcja wyszukująca miejsce
+    const searchLocationOnMap = async (query: string) => {
+        try {
+            const response = await fetch(
+                `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`
+            );
+            const results = await response.json();
+
+            if (results && results.length > 0) {
+                const place = results[0];
+                const lat = parseFloat(place.lat);
+                const lng = parseFloat(place.lon);
+
+                console.log(`Znaleziono: ${place.display_name}`);
+                setMapTargetLocation({ lat, lng });
+            } else {
+                alert(`Nie znaleziono miejsca: ${query}`);
+            }
+        } catch (error) {
+            console.error('Błąd wyszukiwania:', error);
+            alert('Wystąpił błąd podczas wyszukiwania');
+        }
+    };
 
     function handleSpotDataFromMap(spot: Spot | null) {
         setCurrentSpot(spot)
@@ -42,12 +80,10 @@ export const MapView = () => {
 
     function handlePhotosDataFromMap(photos: Photo[]) {
         setCurrentSpotPhotos(photos ?? [])
-
     }
 
     function handleCommentsDataFromMap(comments: Comment[]) {
         setCurrentSpotComments(comments ?? [])
-
     }
 
     const sliderSettings = {
@@ -81,9 +117,7 @@ export const MapView = () => {
             }
             console.log(newComment);
             await insertComment(newComment);
-
             setRefreshTrigger(prev => prev + 1);
-
         } catch (error) {
             console.error("Błąd dodawania komentarza", error);
         }
@@ -141,7 +175,6 @@ export const MapView = () => {
     };
 
     return (
-
         <div className={"map-view-wrapper"}>
             <div className={`info-view ${currentSpot ? "open" : "closed"}`}>
 
@@ -151,62 +184,56 @@ export const MapView = () => {
                             <div className={"slider-container"}>
                                 {currentSpotPhotos.length > 0 ? (
                                     <>
-                                    {isAuthenticated && (
-                                        <div style={{
-                                            position: 'absolute',
-                                            top: '10px',
-                                            right: '10px',
-                                            zIndex: 10
-                                        }}>
-                                            <AddPhotoButton
-                                                onClick={() => setShowAddPhotoModal(true)}
-                                                className="mini-btn"
-                                            />
-                                        </div>
-                                    )}
+                                        {isAuthenticated && (
+                                            <div style={{
+                                                position: 'absolute',
+                                                top: '10px',
+                                                right: '10px',
+                                                zIndex: 10
+                                            }}>
+                                                <AddPhotoButton
+                                                    onClick={() => setShowAddPhotoModal(true)}
+                                                    className="mini-btn"
+                                                />
+                                            </div>
+                                        )}
                                         <Slider {...sliderSettings}>
                                             {currentSpotPhotos?.map((photo, index) => (
-                                                <div className={"current-photo-wrapper"}>
+                                                <div className={"current-photo-wrapper"} key={photo.id}>
                                                     <div className={"photo-wrapper"}>
                                                         <img src={getPhotoUrl(photo.url)} alt="" className={"spot-photo"}
                                                              onClick={() => {
-                                                                 // setSelectedPhoto(photo)
                                                                  setSelectedPhotoIndex(index)
                                                                  setShowModal(true)
                                                              }}/>
                                                         <div className={"photo-info-wrapper"}>
                                                             <p className={"caption"}>{photo.caption}</p>
-                                                            {/*<p className={"author"}>{photo.author.displayName}</p>*/}
                                                             <p className={"author"}><FaRegUser/> Julia Staniszewska</p>
                                                         </div>
-
                                                     </div>
-
                                                 </div>
                                             ))}
                                         </Slider>
                                     </>
-                                    ) :
-                                    (
-                                        <div className="no-photos">
-                                            {isAuthenticated ? (
-                                                    <>
-                                                        <h2>Nikt jeszcze nie dodał zdjęcia</h2><p>Chcesz być
-                                                        pierwszy?</p>
-                                                        <div style={{marginTop: '15px'}}>
-                                                            <AddPhotoButton onClick={() => setShowAddPhotoModal(true)}/>
-                                                        </div>
-                                                    </>
-                                                ) :
-                                                (
-                                                    <>
-                                                        <h2>Nikt jeszcze nie dodał zdjęcia</h2><p>Chcesz być pierwszy?</p>
-                                                        <LoginButton/>
-                                                    </>
-                                                )}
-
-                                        </div>
-                                    )}
+                                ) : (
+                                    <div className="no-photos">
+                                        {isAuthenticated ? (
+                                            <>
+                                                <h2>Nikt jeszcze nie dodał zdjęcia</h2>
+                                                <p>Chcesz być pierwszy?</p>
+                                                <div style={{marginTop: '15px'}}>
+                                                    <AddPhotoButton onClick={() => setShowAddPhotoModal(true)}/>
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <h2>Nikt jeszcze nie dodał zdjęcia</h2>
+                                                <p>Chcesz być pierwszy?</p>
+                                                <LoginButton/>
+                                            </>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         </div>
 
@@ -243,16 +270,19 @@ export const MapView = () => {
                             <GoogleButton lat={currentSpot?.latitude} long={currentSpot?.longitude}/>
                         </div>
                     </>
-
-
                 )}
-
             </div>
+
             <div className={`map-view ${currentSpot ? "with-spot" : "no-spot"}`}>
-                <Map sendSpotDataToMapView={handleSpotDataFromMap} sendPhotosDataToMapView={handlePhotosDataFromMap}
-                     sendCommentsDataToMapView={handleCommentsDataFromMap} refreshTrigger={refreshTrigger}
-                     refreshSpots={refreshSpots}
-                     flyToLocation={mapTargetLocation}/>
+                <Map
+                    sendSpotDataToMapView={handleSpotDataFromMap}
+                    sendPhotosDataToMapView={handlePhotosDataFromMap}
+                    sendCommentsDataToMapView={handleCommentsDataFromMap}
+                    refreshTrigger={refreshTrigger}
+                    refreshSpots={refreshSpots}
+                    flyToLocation={mapTargetLocation}
+                    searchQuery={searchedLocation}
+                />
 
                 {isAuthenticated && (
                     <div style={{position: 'absolute', bottom: '30px', right: '30px', zIndex: 1000}}>
@@ -262,7 +292,6 @@ export const MapView = () => {
                         />
                     </div>
                 )}
-
             </div>
 
             {showModal && currentSpot && (
@@ -294,8 +323,6 @@ export const MapView = () => {
                     }}
                 />
             )}
-
-
         </div>
     );
 }

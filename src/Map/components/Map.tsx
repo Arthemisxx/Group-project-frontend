@@ -47,14 +47,12 @@ const Search = ({provider}: SearchProps) => {
             retainZoomLevel: false,
             autoComplete: true,
             searchLabel: 'Wyszukaj miejsce...',
-
         });
 
         map.addControl(searchControl)
         return () => {
             map.removeControl(searchControl);
         };
-
     }, [map, provider])
 
     return null
@@ -71,7 +69,6 @@ const MapController = ({onMapReady}) => {
     return null;
 };
 
-
 interface MapProps {
     sendSpotDataToMapView: (spot: Spot | null) => void;
     sendPhotosDataToMapView: (photos: Photo[]) => void;
@@ -79,6 +76,7 @@ interface MapProps {
     refreshTrigger: number;
     refreshSpots: number;
     flyToLocation: { lat: number; lng: number } | null;
+    searchQuery?: string;
 }
 
 export const Map = ({
@@ -87,38 +85,52 @@ export const Map = ({
                         sendCommentsDataToMapView,
                         refreshTrigger,
                         refreshSpots,
-                        flyToLocation
+                        flyToLocation,
+                        searchQuery
                     }: MapProps) => {
     const [spots, setSpots] = useState<null | Spot[]>()
     const [photos, setPhotos] = useState<Photo[]>([])
     const [userLocation, setUserLocation] = useState<[number, number]>([51.777024, 19.486368]);
-    const [mapInstance, setMapInstance] = useState(null);
+    const [mapInstance, setMapInstance] = useState<any>(null);
     const [currentSpot, setCurrentSpot] = useState<Spot | null>(null)
     const [currentSpotComments, setCurrentSpotComments] = useState<Comment[]>([])
 
     useEffect(() => {
         sendSpotDataToMapView(currentSpot);
-
     }, [currentSpot, sendSpotDataToMapView]);
 
     useEffect(() => {
         sendPhotosDataToMapView(photos)
-
     }, [photos, sendPhotosDataToMapView]);
 
     useEffect(() => {
         sendCommentsDataToMapView(currentSpotComments)
-
     }, [currentSpotComments, sendCommentsDataToMapView]);
 
     useEffect(() => {
         if (mapInstance && flyToLocation) {
-            // @ts-ignore
             mapInstance.flyTo([flyToLocation.lat, flyToLocation.lng], 12, {
                 duration: 1.5
             });
         }
     }, [mapInstance, flyToLocation]);
+
+    // NOWE - automatyczne wpisanie w search bar
+    useEffect(() => {
+        if (mapInstance && searchQuery) {
+            setTimeout(() => {
+                const searchInput = document.querySelector('.leaflet-control-geosearch form input') as HTMLInputElement;
+                if (searchInput) {
+                    // Wpisz tekst
+                    searchInput.value = searchQuery;
+                    searchInput.focus();
+
+                    // Pokaż że zostało wyszukane
+                    console.log('Wpisano w search bar:', searchQuery);
+                }
+            }, 1500);
+        }
+    }, [mapInstance, searchQuery]);
 
     useEffect(() => {
         const loadSpots = async () => {
@@ -138,7 +150,6 @@ export const Map = ({
             getComments(currentSpot.id);
             getPhotos(currentSpot.id);
         }
-
     }, [currentSpot, refreshTrigger]);
 
     const getPhotos = async (id: number) => {
@@ -158,14 +169,12 @@ export const Map = ({
             navigator.geolocation.getCurrentPosition((position) => {
                     const {latitude, longitude} = position.coords;
                     setUserLocation([latitude, longitude]);
-
                 }, (error) => {
                     console.error('Error getting user location:', error);
                 }
             );
         }
     }
-
 
     const findUserLocation = () => {
         if (!mapInstance) return;
@@ -174,40 +183,42 @@ export const Map = ({
         findUser();
         console.log(userLocation)
 
-        // @ts-ignore
         mapInstance.flyTo(userLocation, 14);
     };
-
 
     return (
         <>
             <div className={"map-wrapper"}>
-                <button className={"user-localization"} onClick={findUserLocation}><img src="public/my-location.svg"
-                                                                                        alt="My location"/></button>
-                <MapContainer center={userLocation} zoom={7} scrollWheelZoom={true}
-                              style={{height: '100%', width: '100%'}}>
+                <button className={"user-localization"} onClick={findUserLocation}>
+                    <img src="public/my-location.svg" alt="My location"/>
+                </button>
+                <MapContainer
+                    center={userLocation}
+                    zoom={7}
+                    scrollWheelZoom={true}
+                    style={{height: '100%', width: '100%'}}
+                >
                     <TileLayer
                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                         url={"https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"}
                     />
                     <MapController onMapReady={setMapInstance}/>
                     {spots?.map(spot => (
-                        <Marker key={spot.id}
-                                position={[spot.latitude, spot.longitude]}
-                                icon={currentSpot?.id === spot.id ? selectedIcon : defaultIcon}
-                                eventHandlers={{
-                            click: () => {
-                                setCurrentSpot(spot);
-                                getPhotos(spot.id);
-                                getComments(spot.id);
-                            }
-                        }}>
-
-                        </Marker>
+                        <Marker
+                            key={spot.id}
+                            position={[spot.latitude, spot.longitude]}
+                            icon={currentSpot?.id === spot.id ? selectedIcon : defaultIcon}
+                            eventHandlers={{
+                                click: () => {
+                                    setCurrentSpot(spot);
+                                    getPhotos(spot.id);
+                                    getComments(spot.id);
+                                }
+                            }}
+                        />
                     ))}
                     <Search provider={new OpenStreetMapProvider()}/>
                 </MapContainer>
-
             </div>
         </>
     );
