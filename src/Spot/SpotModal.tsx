@@ -172,9 +172,10 @@ export const SpotModal = ({ open, onClose, spot, photos, comments, onAddComment,
                             gap: '10px'
                         }}>
                             <h2 className="spot-title">{currentSpot.title}</h2>
-                            {isOwner && (
+                            //TODO odkomentować jak zmienią token na backendzie
+                            {/*{isOwner && (*/}
                                 <EditSpotButton onClick={() => setShowEditModal(true)} />
-                            )}
+                            {/*)}*/}
                         </div>
                         <div className="section">
                             <p className="label">O miejscu</p>
