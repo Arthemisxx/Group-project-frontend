@@ -15,7 +15,7 @@ interface LoginModalProps {
 export default function LoginModal({ isOpen, onClose, onSwitchToRegister }: LoginModalProps) {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-    const { login } = useAuth(); // Pobieramy funkcję login z kontekstu
+    const { login } = useAuth();
     const navigate = useNavigate();
 
     useEffect(() => {
