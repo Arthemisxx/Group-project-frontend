@@ -7,7 +7,7 @@ import type {Photo} from "../Utils/Photo.ts";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-import {FaRegUser} from "react-icons/fa";
+import {FaPaperPlane, FaRegUser} from "react-icons/fa";
 import {SpotModal} from "../Spot/SpotModal.tsx";
 import type {Comment} from "../Utils/Comment.ts";
 import type {PostComment} from "../Utils/postComment.ts";
@@ -29,6 +29,7 @@ export const MapView = () => {
     const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
     const [refreshSpots, setRefreshSpots] = useState<number>(0)
     const [mapTargetLocation, setMapTargetLocation] = useState<{ lat: number, lng: number } | null>(null);
+    const [newComment, setNewComment] = useState("");
 
     const {isAuthenticated} = useAuth();
 
@@ -140,6 +141,13 @@ export const MapView = () => {
         }
     };
 
+    function handleSendComment() {
+        if (newComment.trim().length > 0) {
+            handleAddComment(newComment);
+            setNewComment("");
+        }
+    }
+
     return (
 
         <div className={"map-view-wrapper"}>
@@ -236,6 +244,22 @@ export const MapView = () => {
                                 ) : (
                                     <p className="no-comments">Brak komentarzy</p>
                                 )}
+                            </div>
+                            <div className="add-comment-wrapper">
+                            <textarea
+                                className="comment-input"
+                                placeholder="Dodaj komentarz..."
+                                value={newComment}
+                                onChange={(e) => setNewComment(e.target.value)}
+                                rows={2}
+                            />
+                                <button
+                                    className="send-comment-btn"
+                                    onClick={handleSendComment}
+                                    disabled={newComment.trim().length === 0}
+                                >
+                                    <FaPaperPlane/>
+                                </button>
                             </div>
                         </div>
                         <div className="spot-google-btn-wrapper">
