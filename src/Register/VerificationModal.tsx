@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import "./VerificationModal.css";
 import axiosClient from "../Auth/axiosClient.ts";
+import {createPortal} from "react-dom";
 
 interface VerificationModalProps {
     isOpen: boolean;
@@ -55,19 +56,19 @@ export default function VerificationModal({ isOpen, onClose, email, onVerified }
 
     if (!isOpen) return null;
 
-    return (
-        <div className="modal-overlay">
-            <div className="modal-content">
-                <button className="modal-close" onClick={onClose}>×</button>
+    return createPortal(
+        <div className="verification-modal-overlay" onClick={onClose}>
+            <div className="verification-modal-content" onClick={(e) => e.stopPropagation()}>
+                <button className="verification-modal-close" onClick={onClose}>×</button>
                 <h2>Weryfikacja</h2>
 
-                <p className="info-text">
-                    Wprowadź kod weryfikacyjny, który wysłaliśmy na adres: <br/>
+                <p className="verification-info-text">
+                    Wprowadź kod weryfikacyjny, który wysłaliśmy na adres:<br />
                     <strong>{email}</strong>
                 </p>
 
                 {message && (
-                    <div className={message.type === "success" ? "msg-success" : "msg-error"}>
+                    <div className={message.type === "success" ? "verification-msg success" : "verification-msg error"}>
                         {message.text}
                     </div>
                 )}
@@ -79,19 +80,21 @@ export default function VerificationModal({ isOpen, onClose, email, onVerified }
                         value={code}
                         onChange={(e) => setCode(e.target.value)}
                         required
+                        className="verification-input"
                     />
-                    <button type="submit" className="btn-submit" disabled={isLoading}>
+                    <button type="submit" className="verification-btn-submit" disabled={isLoading}>
                         {isLoading ? "Weryfikuję..." : "Zatwierdź"}
                     </button>
                 </form>
 
-                <div className="resend-link">
+                <div className="verification-resend-link">
                     Nie otrzymałeś kodu?
                     <span onClick={handleResend}>
                         Wyślij ponownie
                     </span>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }

@@ -43,6 +43,7 @@ export const uploadSpotPhoto = async (spotId: number, photoData: UploadPhotoData
 //     return response.data;
 // }
 
+//@ts-ignore
 export const fetchSpotsData = async (minLat: number, maxLat: number, minLng: number, maxLng: number): Promise<Spot[]> => {
     const response = await axiosClient.get<Spot[]>('/spots');
     return response.data;

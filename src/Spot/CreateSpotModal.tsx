@@ -2,7 +2,7 @@ import "./CreateSpotModal.css";
 import {useState, useEffect} from "react";
 import type {SpotCreate} from "../Utils/Spot.ts";
 import {MapContainer, TileLayer, useMap, useMapEvents} from "react-leaflet";
-import {FaCamera, FaMapMarkerAlt, FaTrash} from "react-icons/fa";
+import {FaCamera, FaMapMarkerAlt} from "react-icons/fa";
 import {fetchAddressFromCoords} from "../Utils/geocoding.ts";
 import heic2any from "heic2any";
 import {getGpsFromImage} from "../Utils/gpsUtils.ts";
@@ -20,7 +20,6 @@ interface CreateModalProps {
     clickedLocation: { lat: number; lng: number } | null;
 }
 
-// Komponent: Nasłuchuje ręcznego przesuwania mapy i aktualizuje formularz
 const MapCenterUpdater = ({onCenterChange}: { onCenterChange: (lat: number, lng: number) => void }) => {
     useMapEvents({
         move: (e) => {
@@ -31,7 +30,6 @@ const MapCenterUpdater = ({onCenterChange}: { onCenterChange: (lat: number, lng:
     return null;
 };
 
-// Komponent: Programowo przesuwa mapę (flyTo) gdy zmieni się flyToPosition
 const MapProgrammaticMover = ({ coords }: { coords: { lat: number, lng: number } | null }) => {
     const map = useMap();
 
@@ -60,14 +58,12 @@ export const CreateSpotModal = ({open, onClose, onSubmit, clickedLocation}: Crea
 
     const [formData, setFormData] = useState<Partial<SpotCreate>>(initialFormData);
 
-    // Stan do wymuszania przesunięcia mapy (np. po wgraniu zdjęcia)
     const [flyToPosition, setFlyToPosition] = useState<{ lat: number, lng: number } | null>(null);
 
     const [tagsInput, setTagsInput] = useState("");
     const [isLoadingAddress, setIsLoadingAddress] = useState(false);
     const [photos, setPhotos] = useState<PhotoDraft[]>([]);
 
-    // 1. Inicjalizacja przy otwarciu
     useEffect(() => {
         if (open) {
             const startLat = clickedLocation ? clickedLocation.lat : defaultCenter.lat;
@@ -79,12 +75,10 @@ export const CreateSpotModal = ({open, onClose, onSubmit, clickedLocation}: Crea
                 longitude: startLng
             }));
 
-            // Ustaw mapę na startowej pozycji
             setFlyToPosition({ lat: startLat, lng: startLng });
         }
     }, [clickedLocation, open]);
 
-    // 2. Automatyczne pobieranie adresu (Debounce)
     useEffect(() => {
         if (!open || !formData.latitude || !formData.longitude) return;
 
@@ -106,14 +100,11 @@ export const CreateSpotModal = ({open, onClose, onSubmit, clickedLocation}: Crea
         return () => clearTimeout(timer);
     }, [formData.latitude, formData.longitude, open]);
 
-    // 3. Reset przy zamknięciu
     useEffect(() => {
         if (!open) {
-            // Czyścimy zdjęcia (zwalniamy pamięć URL)
             photos.forEach(photo => URL.revokeObjectURL(photo.previewUrl));
             setPhotos([]);
 
-            // Czyścimy tagi i formularz
             setTagsInput("");
             setFormData(initialFormData);
             setIsLoadingAddress(false);
@@ -122,7 +113,6 @@ export const CreateSpotModal = ({open, onClose, onSubmit, clickedLocation}: Crea
 
     if (!open) return null;
 
-    // Handler ręcznego przesuwania (aktualizuje tylko dane, nie mapę)
     const handleMapMove = (lat: number, lng: number) => {
         setFormData(prev => ({
             ...prev,
@@ -273,7 +263,6 @@ export const CreateSpotModal = ({open, onClose, onSubmit, clickedLocation}: Crea
 
                     <form className="create-form" onSubmit={handleSubmit}>
 
-                        {/* MAPA */}
                         <div className="modal-map-wrapper">
                             <div className="map-center-pin"><FaMapMarkerAlt/></div>
                             <div className="map-center-shadow"></div>
@@ -288,10 +277,8 @@ export const CreateSpotModal = ({open, onClose, onSubmit, clickedLocation}: Crea
                                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                                 />
 
-                                {/* --- TU SĄ WYKORZYSTYWANE TWOJE KOMPONENTY --- */}
                                 <MapCenterUpdater onCenterChange={handleMapMove}/>
                                 <MapProgrammaticMover coords={flyToPosition}/>
-                                {/* --------------------------------------------- */}
 
                             </MapContainer>
                         </div>
@@ -323,7 +310,7 @@ export const CreateSpotModal = ({open, onClose, onSubmit, clickedLocation}: Crea
                                             <div className="photo-thumbnail-wrapper">
                                                 <img src={draft.previewUrl} alt="preview" className="photo-thumbnail"/>
                                                 <button type="button" className="photo-remove-btn"
-                                                        onClick={() => handleRemovePhoto(index)}><FaTrash/></button>
+                                                        onClick={() => handleRemovePhoto(index)}>x</button>
                                             </div>
                                             <input type="text" className="photo-caption-input" placeholder="Opis..."
                                                    value={draft.caption}
