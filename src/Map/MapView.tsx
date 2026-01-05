@@ -1,7 +1,7 @@
 import './MapView.css';
 import {Map} from "./components/Map.tsx"
 import {GoogleButton} from "./components/GoogleButton.tsx";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import type {Spot, SpotCreate} from "../Utils/Spot.ts";
 import type {Photo} from "../Utils/Photo.ts";
 import Slider from "react-slick";
@@ -11,13 +11,21 @@ import {FaPaperPlane, FaRegUser} from "react-icons/fa";
 import {SpotModal} from "../Spot/SpotModal.tsx";
 import type {Comment} from "../Utils/Comment.ts";
 import type {PostComment} from "../Utils/postComment.ts";
-import {insertComment, insertSpot, uploadSpotPhoto} from "../Utils/api.ts";
+import {
+    insertComment,
+    insertSpot,
+    isSpotSavedForLater,
+    removeSpotForLater,
+    saveSpotForLater,
+    uploadSpotPhoto
+} from "../Utils/api.ts";
 import {useAuth} from "../Auth/AuthProvider.tsx";
 import {CreateSpotButton} from "../Spot/CreateSpotButton.tsx";
 import {CreateSpotModal, type PhotoDraft} from "../Spot/CreateSpotModal.tsx";
 import {AddPhotoButton} from "../Spot/Photos/AddPhotoButton.tsx";
 import {AddPhotoModal} from "../Spot/Photos/AddPhotoModal.tsx";
 import {LoginButton} from "../Login/LoginButton.tsx";
+import { FaRegBookmark, FaBookmark, FaRegHeart } from "react-icons/fa6";
 
 export const MapView = () => {
     const [currentSpot, setCurrentSpot] = useState<Spot | null>(null)
@@ -30,11 +38,59 @@ export const MapView = () => {
     const [refreshSpots, setRefreshSpots] = useState<number>(0)
     const [mapTargetLocation, setMapTargetLocation] = useState<{ lat: number, lng: number } | null>(null);
     const [newComment, setNewComment] = useState("");
+    const [isSaved, setIsSaved] = useState(false);
 
     const {isAuthenticated} = useAuth();
 
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [newSpotLocation, setNewSpotLocation] = useState<{ lat: number, lng: number } | null>(null);
+
+    useEffect(() => {
+        const checkSavedStatus = async () => {
+            if (currentSpot && isAuthenticated) {
+                try {
+                    const saved = await isSpotSavedForLater(currentSpot.id);
+                    setIsSaved(saved);
+                } catch (error) {
+                    console.error("Błąd sprawdzania statusu zapisanego:", error);
+                    setIsSaved(false);
+                }
+            } else {
+                setIsSaved(false); // Resetujemy jeśli brak spota lub użytkownik wylogowany
+            }
+        };
+
+        checkSavedStatus();
+    }, [currentSpot, isAuthenticated]);
+
+    const handleToggleSave = async () => {
+        if (!isAuthenticated) {
+            alert("Zaloguj się, aby zapisać miejsce na później!");
+            // Opcjonalnie: możesz tu otwierać modal logowania, np. loginButtonRef.current.click()
+            return;
+        }
+
+        if (!currentSpot) return;
+
+        // Opcjonalne: Optymistyczna aktualizacja UI (zmieniamy ikonę zanim API odpowie)
+        const previousState = isSaved;
+        setIsSaved(!isSaved);
+
+        try {
+            if (previousState) {
+                // Było zapisane -> Usuwamy
+                await removeSpotForLater(currentSpot.id);
+            } else {
+                // Nie było zapisane -> Zapisujemy
+                await saveSpotForLater(currentSpot.id);
+            }
+        } catch (error) {
+            console.error("Błąd podczas zapisywania/usuwania:", error);
+            // Cofamy zmianę w razie błędu
+            setIsSaved(previousState);
+            alert("Wystąpił błąd połączenia.");
+        }
+    };
 
 
     function handleSpotDataFromMap(spot: Spot | null) {
@@ -218,11 +274,27 @@ export const MapView = () => {
                         </div>
 
                         <div className={"spot-info-wrapper"}>
-                            <p className={"spot-name"}
-                               onClick={() => {
-                                   setSelectedPhotoIndex(0)
-                                   setShowModal(true)
-                               }}>{currentSpot?.title}</p>
+                            <div className={"spot-info-inner-wrapper"}>
+                                <p className={"spot-name"}
+                                   onClick={() => {
+                                       setSelectedPhotoIndex(0)
+                                       setShowModal(true)
+                                   }}>{currentSpot?.title}</p>
+                                <div style={{display: 'flex', alignItems: 'center'}}>
+                                    <button
+                                        className={`spot-info-for-later ${isSaved ? "active" : ""}`}
+                                        onClick={handleToggleSave}
+                                        title={isSaved ? "Usuń z zapisanych" : "Zapisz na później"}
+                                    >
+                                        {isSaved ? <FaBookmark/> : <FaRegBookmark/>}
+                                    </button>
+
+                                    <button className={"spot-info-like"}><FaRegHeart/></button>
+                                </div>
+
+
+                            </div>
+
                             <p className={"label"}>Opis</p>
                             <p className={"descr"}>{currentSpot?.description}</p>
                         </div>
@@ -231,7 +303,7 @@ export const MapView = () => {
                             <h3>Komentarze</h3>
 
                             <div className="comments-list">
-                                {currentSpotComments.length > 0 ? (
+                            {currentSpotComments.length > 0 ? (
                                     currentSpotComments.map(comment => (
                                         <div key={comment.id} className="comment">
                                             <div className="comment-author">{comment.author.displayName}</div>
