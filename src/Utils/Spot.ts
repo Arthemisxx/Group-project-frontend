@@ -8,7 +8,7 @@ export interface Spot {
     categoryId: Category;
     author: Author;
     address?: Address;
-
+    tags: string[];
 }
 
 export interface SpotCreate{

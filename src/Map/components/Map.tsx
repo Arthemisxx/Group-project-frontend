@@ -58,15 +58,17 @@ interface MapProps {
     sendSpotDataToMapView: (spot: Spot | null) => void;
     sendPhotosDataToMapView: (photos: Photo[]) => void;
     sendCommentsDataToMapView: (comments: Comment[]) => void;
+    activeTag: string | null;
     refreshTrigger: number;
     refreshSpots: number;
-    flyToLocation: { lat: number; lng: number } | null;
+    flyToLocation: { lat: number; lng: number } | null; 
 }
 
 export const Map = ({
                         sendSpotDataToMapView,
                         sendPhotosDataToMapView,
                         sendCommentsDataToMapView,
+                        activeTag,
                         refreshTrigger,
                         refreshSpots,
                         flyToLocation
@@ -102,11 +104,16 @@ export const Map = ({
         }
     }, [mapInstance, flyToLocation]);
 
-    useEffect(() => {
+   useEffect(() => {
         const loadSpots = async () => {
             try {
-                // Pobieramy spoty
-                const response = await fetchSpotsData(-90, 90, -180, 180);
+                let response;
+                if (activeTag) {
+                    const res = await fetch(`http://localhost:8080/spots/tag?tagName=${activeTag}`);
+                    response = await res.json();
+                } else {
+                    response = await fetchSpotsData(-90, 90, -180, 180);
+                }
                 setSpots(response);
             } catch (e) {
                 console.error("Błąd pobierania spotów:", e);
@@ -114,7 +121,7 @@ export const Map = ({
         };
 
         loadSpots();
-    }, [refreshSpots]);
+    }, [refreshSpots, activeTag]);
 
     useEffect(() => {
         if (currentSpot) {

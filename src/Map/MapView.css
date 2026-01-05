@@ -382,3 +382,31 @@
     display: flex;
     justify-content: center;
 }
+
+
+
+
+
+/* Kontener na tagi */
+
+.tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 10px 0;
+}
+
+.sidebar-tag-pill {
+    background: #eef1f4;
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #333;
+    border: 1px solid #d1d9e0;
+}
+.sidebar-tag-pill:hover {
+    background-color: #28a745; 
+    color: white;
+    border-color: #28a745;
+}

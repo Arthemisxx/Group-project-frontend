@@ -1,0 +1,28 @@
+.tag-bar {
+    display: flex;
+    gap: 12px;
+    padding: 10px 20px;
+    overflow-x: auto;
+    background: white;
+    border-bottom: 1px solid #ddd;
+    z-index: 1000;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.tag-pill {
+    padding: 6px 18px;
+    border-radius: 20px;
+    border: 1px solid #ddd;
+    background: white;
+    cursor: pointer;
+    white-space: nowrap;
+    font-weight: 600;
+    transition: 0.2s;
+}
+
+.tag-pill.active {
+    background: #28a745;
+    color: white;
+    border-color: #28a745;
+}

@@ -1,7 +1,7 @@
 import './MapView.css';
 import {Map} from "./components/Map.tsx"
 import {GoogleButton} from "./components/GoogleButton.tsx";
-import {useState} from "react";
+import {useState,useEffect} from "react";
 import type {Spot, SpotCreate} from "../Utils/Spot.ts";
 import type {Photo} from "../Utils/Photo.ts";
 import Slider from "react-slick";
@@ -15,6 +15,8 @@ import {insertComment, insertSpot, uploadSpotPhoto} from "../Utils/api.ts";
 import {useAuth} from "../Auth/AuthProvider.tsx";
 import {CreateSpotButton} from "../Spot/CreateSpotButton.tsx";
 import {CreateSpotModal, type PhotoDraft} from "../Spot/CreateSpotModal.tsx";
+import { TagBar } from "../tags/TagBar.tsx";
+import { useSearchParams } from "react-router-dom";
 
 export const MapView = () => {
     const [currentSpot, setCurrentSpot] = useState<Spot | null>(null)
@@ -31,6 +33,19 @@ export const MapView = () => {
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [newSpotLocation, setNewSpotLocation] = useState<{ lat: number, lng: number } | null>(null);
 
+
+    const [searchParams] = useSearchParams();
+    const urlTag = searchParams.get("tag");
+
+
+    const [activeTag, setActiveTag] = useState<string | null>(urlTag);
+
+    useEffect(() => {
+    const currentTag = searchParams.get("tag");
+    if (currentTag !== activeTag) {
+        setActiveTag(currentTag);
+    }
+}, [searchParams]);
 
 
     function handleSpotDataFromMap(spot: Spot | null) {
@@ -95,7 +110,7 @@ export const MapView = () => {
             console.log("Tworzenie spota...");
 
             const createdSpot = await insertSpot(data);
-            const newSpotId = createdSpot.id; // Zakładam, że backend zwraca utworzony obiekt z ID
+            const newSpotId = createdSpot.id; 
 
             console.log(`Spot utworzony (ID: ${newSpotId}).`);
 
@@ -142,128 +157,110 @@ export const MapView = () => {
     };
 
     return (
-
         <div className={"map-view-wrapper"}>
             <div className={`info-view ${currentSpot ? "open" : "closed"}`}>
-
                 {currentSpot && (
                     <>
                         <div className={"photos-info-wrapper"}>
                             <div className={"slider-container"}>
                                 {currentSpotPhotos.length > 0 ? (
-                                        <Slider {...sliderSettings}>
-                                            {currentSpotPhotos?.map((photo, index) => (
-                                                <div className={"current-photo-wrapper"}>
-                                                    <div className={"photo-wrapper"}>
-                                                        <img src={getPhotoUrl(photo.url)} alt="" className={"spot-photo"}
-                                                             onClick={() => {
-                                                                 // setSelectedPhoto(photo)
-                                                                 setSelectedPhotoIndex(index)
-                                                                 setShowModal(true)
-                                                             }}/>
-                                                        <div className={"photo-info-wrapper"}>
-                                                            <p className={"caption"}>{photo.caption}</p>
-                                                            {/*<p className={"author"}>{photo.author.displayName}</p>*/}
-                                                            <p className={"author"}><FaRegUser/> Julia Staniszewska</p>
-                                                        </div>
-
+                                    <Slider {...sliderSettings}>
+                                        {currentSpotPhotos.map((photo, index) => (
+                                            <div key={index} className={"current-photo-wrapper"}>
+                                                <div className={"photo-wrapper"}>
+                                                    <img src={getPhotoUrl(photo.url)} alt="" className={"spot-photo"}
+                                                         onClick={() => {
+                                                             setSelectedPhotoIndex(index)
+                                                             setShowModal(true)
+                                                         }}/>
+                                                    <div className={"photo-info-wrapper"}>
+                                                        <p className={"caption"}>{photo.caption}</p>
+                                                        <p className={"author"}><FaRegUser/> Julia Staniszewska</p>
                                                     </div>
-
                                                 </div>
-                                            ))}
-                                        </Slider>
-                                    ) :
-                                    (
-                                        <div className="no-photos">
-                                            {isAuthenticated ? (
-                                                    <><h2>Nikt jeszcze nie dodał zdjęcia</h2><p>Chcesz być pierwszy?</p></>
-                                                //TODO dodawanie zdjęć przycisk
-                                                ) :
-                                                (
-                                                    <><h2>Nikt jeszcze nie dodał zdjęcia</h2><p>Chcesz być pierwszy?</p>
-                                                        <button className="btn-login">Zaloguj Się</button>
-                                                    </>
-                                                )}
-
-                                        </div>
-                                    )}
+                                            </div>
+                                        ))}
+                                    </Slider>
+                                ) : (
+                                    <div className="no-photos">
+                                        {isAuthenticated ? (
+                                            <><h2>Nikt jeszcze nie dodał zdjęcia</h2><p>Chcesz być pierwszy?</p></>
+                                        ) : (
+                                            <><h2>Nikt jeszcze nie dodał zdjęcia</h2><p>Chcesz być pierwszy?</p>
+                                                <button className="btn-login">Zaloguj Się</button>
+                                            </>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         </div>
 
                         <div className={"spot-info-wrapper"}>
-                            <p className={"spot-name"}
-                               onClick={() => {
-                                   setSelectedPhotoIndex(0)
-                                   setShowModal(true)
-                               }}>{currentSpot?.title}</p>
+                            <p className={"spot-name"} onClick={() => {
+                                setSelectedPhotoIndex(0)
+                                setShowModal(true)
+                            }}>{currentSpot.title}</p>
+
+                            {/* Tagi w panelu bocznym */}
+                            <div className="tags-container">
+                                {currentSpot.tags?.map((tag: string) => (
+                                    <span key={tag} className="sidebar-tag-pill">{tag}</span>
+                                ))}
+                            </div>
+
                             <p className={"label"}>Opis</p>
-                            <p className={"descr"}>{currentSpot?.description}</p>
+                            <p className={"descr"}>{currentSpot.description}</p>
                         </div>
 
                         <div className="comments-section">
                             <h3>Komentarze</h3>
-
                             <div className="comments-list">
                                 {currentSpotComments.length > 0 ? (
                                     currentSpotComments.map(comment => (
                                         <div key={comment.id} className="comment">
                                             <div className="comment-author">{comment.author.displayName}</div>
-                                            <div className="comment-date">
-                                                {new Date(comment.createdAt).toLocaleDateString()}
-                                            </div>
+                                            <div className="comment-date">{new Date(comment.createdAt).toLocaleDateString()}</div>
                                             <p className="comment-content">{comment.content}</p>
                                         </div>
                                     ))
-                                ) : (
-                                    <p className="no-comments">Brak komentarzy</p>
-                                )}
+                                ) : <p className="no-comments">Brak komentarzy</p>}
                             </div>
                         </div>
                         <div className="spot-google-btn-wrapper">
-                            <GoogleButton lat={currentSpot?.latitude} long={currentSpot?.longitude}/>
+                            <GoogleButton lat={currentSpot.latitude} long={currentSpot.longitude}/>
                         </div>
                     </>
-
-
                 )}
-
             </div>
-            <div className={`map-view ${currentSpot ? "with-spot" : "no-spot"}`}>
-                <Map sendSpotDataToMapView={handleSpotDataFromMap} sendPhotosDataToMapView={handlePhotosDataFromMap}
-                     sendCommentsDataToMapView={handleCommentsDataFromMap} refreshTrigger={refreshTrigger} refreshSpots = {refreshSpots}
-                     flyToLocation={mapTargetLocation}/>
+
+            <div className={`map-view ${currentSpot ? "with-spot" : "no-spot"}`} style={{flexDirection: 'column'}}> {/* 👈 Ważny flex-direction */}
+                <TagBar onTagSelect={(tag) => setActiveTag(tag)} />
+                <Map 
+                    sendSpotDataToMapView={handleSpotDataFromMap} 
+                    sendPhotosDataToMapView={handlePhotosDataFromMap}
+                    sendCommentsDataToMapView={handleCommentsDataFromMap} 
+                    refreshTrigger={refreshTrigger} 
+                    refreshSpots={refreshSpots}
+                    flyToLocation={mapTargetLocation}
+                    activeTag={activeTag}
+                />
 
                 {isAuthenticated && (
                     <div style={{position: 'absolute', bottom: '30px', right: '30px', zIndex: 1000}}>
-                        <CreateSpotButton
-                            onClick={handleFabClick}
-                            variant="fab"
-                        />
+                        <CreateSpotButton onClick={handleFabClick} variant="fab" />
                     </div>
                 )}
-
             </div>
 
             {showModal && currentSpot && (
                 <SpotModal
-                    open={showModal}
-                    onClose={() => setShowModal(false)}
-                    spot={currentSpot}
-                    photos={currentSpotPhotos}
-                    comments={currentSpotComments}
-                    onAddComment={handleAddComment}
+                    open={showModal} onClose={() => setShowModal(false)}
+                    spot={currentSpot} photos={currentSpotPhotos}
+                    comments={currentSpotComments} onAddComment={handleAddComment}
                     initialPhotoIndex={selectedPhotoIndex}
                 />
             )}
-
-            <CreateSpotModal
-                open={showCreateModal}
-                onClose={() => setShowCreateModal(false)}
-                onSubmit={handleCreateSpot}
-                clickedLocation={newSpotLocation}
-            />
-
-
+            <CreateSpotModal open={showCreateModal} onClose={() => setShowCreateModal(false)} onSubmit={handleCreateSpot} clickedLocation={newSpotLocation} />
         </div>
     );
 }
