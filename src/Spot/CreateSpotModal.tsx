@@ -230,7 +230,6 @@ export const CreateSpotModal = ({open, onClose, onSubmit, clickedLocation}: Crea
 
         onSubmit(newSpot, photos);
 
-        // Reset formularza
         setTagsInput("");
         setFormData({title: "", description: "", addressCountry: "Polska", tagNames: []});
         setPhotos([]);

@@ -98,7 +98,7 @@ export const MapView = () => {
             console.log("Tworzenie spota...");
 
             const createdSpot = await insertSpot(data);
-            const newSpotId = createdSpot.id; // Zakładam, że backend zwraca utworzony obiekt z ID
+            const newSpotId = createdSpot.id;
 
             console.log(`Spot utworzony (ID: ${newSpotId}).`);
 

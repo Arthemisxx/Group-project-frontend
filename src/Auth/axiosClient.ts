@@ -14,7 +14,7 @@ axiosClient.interceptors.request.use(
     (config) => {
         const isPublic = publicEndpoints.some(endpoint => config.url?.includes(endpoint));
         if(!isPublic) {
-            const token = localStorage.getItem('token'); // Pobieramy token z pamięci
+            const token = localStorage.getItem('token');
             if (token) {
                 config.headers.Authorization = `Bearer ${token}`;
             }

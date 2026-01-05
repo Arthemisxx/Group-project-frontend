@@ -123,7 +123,6 @@ export const Map = ({
     useEffect(() => {
         const loadSpots = async () => {
             try {
-                // Pobieramy spoty
                 const response = await fetchSpotsData(-90, 90, -180, 180);
                 setSpots(response);
             } catch (e) {
