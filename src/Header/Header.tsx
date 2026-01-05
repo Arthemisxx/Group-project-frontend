@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "./Header.css";
 import LoginModal from "../Login/LoginModal";
 import RegisterModal from "../Register/RegisterModal";
@@ -8,6 +8,7 @@ import {useAuth} from "../Auth/AuthProvider.tsx";
 import {FaUser} from "react-icons/fa";
 
 export default function Header() {
+    const navigate = useNavigate();
     const [isLoginOpen, setIsLoginOpen] = useState(false);
     const { isAuthenticated, logout } = useAuth();
     const [isRegisterOpen, setIsRegisterOpen] = useState(false);
@@ -16,7 +17,7 @@ export default function Header() {
 
     const handleLogout = () => {
         logout();
-
+        navigate("/");
     };
     return (
         <>
@@ -38,7 +39,7 @@ export default function Header() {
 
                             <div style={{display: "flex", alignItems: "center", gap: "10px"}}>
                                 {/* Ikonka profilu */}
-                                <Link to="/użytkownik">
+                                <Link to="/uzytkownik">
                                     <button className="btn-login">
                                         <FaUser/>
                                     </button>
