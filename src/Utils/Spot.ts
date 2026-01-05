@@ -11,6 +11,18 @@ export interface Spot {
     tags: string[];
 }
 
+export interface SpotUpdate {
+    title: string;
+    description?: string;
+    latitude: number;
+    longitude: number;
+    categoryId: number;
+    addressName: string;
+    addressCountry: string;
+    addressRegion: string;
+    tagNames: string[];
+}
+
 export interface SpotCreate{
     title: string;
     description?: string;

@@ -1,7 +1,7 @@
 import './MapView.css';
 import {Map} from "./components/Map.tsx"
 import {GoogleButton} from "./components/GoogleButton.tsx";
-import {useState,useEffect} from "react";
+import {useState} from "react";
 import type {Spot, SpotCreate} from "../Utils/Spot.ts";
 import type {Photo} from "../Utils/Photo.ts";
 import Slider from "react-slick";
@@ -15,14 +15,16 @@ import {insertComment, insertSpot, uploadSpotPhoto} from "../Utils/api.ts";
 import {useAuth} from "../Auth/AuthProvider.tsx";
 import {CreateSpotButton} from "../Spot/CreateSpotButton.tsx";
 import {CreateSpotModal, type PhotoDraft} from "../Spot/CreateSpotModal.tsx";
-import { TagBar } from "../tags/TagBar.tsx";
-import { useSearchParams } from "react-router-dom";
+import {AddPhotoButton} from "../Spot/Photos/AddPhotoButton.tsx";
+import {AddPhotoModal} from "../Spot/Photos/AddPhotoModal.tsx";
+import {LoginButton} from "../Login/LoginButton.tsx";
 
 export const MapView = () => {
     const [currentSpot, setCurrentSpot] = useState<Spot | null>(null)
     const [currentSpotPhotos, setCurrentSpotPhotos] = useState<Photo[]>([])
     const [currentSpotComments, setCurrentSpotComments] = useState<Comment[]>([])
     const [showModal, setShowModal] = useState<boolean>(false);
+    const [showAddPhotoModal, setShowAddPhotoModal] = useState(false);
     const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number>(0);
     const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
     const [refreshSpots, setRefreshSpots] = useState<number>(0)
@@ -34,36 +36,18 @@ export const MapView = () => {
     const [newSpotLocation, setNewSpotLocation] = useState<{ lat: number, lng: number } | null>(null);
 
 
-    const [searchParams] = useSearchParams();
-    const urlTag = searchParams.get("tag");
-
-
-    const [activeTag, setActiveTag] = useState<string | null>(urlTag);
-
-    useEffect(() => {
-    const currentTag = searchParams.get("tag");
-    if (currentTag !== activeTag) {
-        setActiveTag(currentTag);
-    }
-}, [searchParams]);
-
-
     function handleSpotDataFromMap(spot: Spot | null) {
         setCurrentSpot(spot)
     }
 
     function handlePhotosDataFromMap(photos: Photo[]) {
         setCurrentSpotPhotos(photos ?? [])
-        photos?.map(p => {
-            console.log(p)
-        })
+
     }
 
     function handleCommentsDataFromMap(comments: Comment[]) {
         setCurrentSpotComments(comments ?? [])
-        comments?.map(p => {
-            console.log(p)
-        })
+
     }
 
     const sliderSettings = {
@@ -110,7 +94,7 @@ export const MapView = () => {
             console.log("Tworzenie spota...");
 
             const createdSpot = await insertSpot(data);
-            const newSpotId = createdSpot.id; 
+            const newSpotId = createdSpot.id;
 
             console.log(`Spot utworzony (ID: ${newSpotId}).`);
 
@@ -164,34 +148,62 @@ export const MapView = () => {
                         <div className={"photos-info-wrapper"}>
                             <div className={"slider-container"}>
                                 {currentSpotPhotos.length > 0 ? (
-                                    <Slider {...sliderSettings}>
-                                        {currentSpotPhotos.map((photo, index) => (
-                                            <div key={index} className={"current-photo-wrapper"}>
-                                                <div className={"photo-wrapper"}>
-                                                    <img src={getPhotoUrl(photo.url)} alt="" className={"spot-photo"}
-                                                         onClick={() => {
-                                                             setSelectedPhotoIndex(index)
-                                                             setShowModal(true)
-                                                         }}/>
-                                                    <div className={"photo-info-wrapper"}>
-                                                        <p className={"caption"}>{photo.caption}</p>
-                                                        <p className={"author"}><FaRegUser/> Julia Staniszewska</p>
+                                    <>
+                                    {isAuthenticated && (
+                                        <div style={{
+                                            position: 'absolute',
+                                            top: '10px',
+                                            right: '10px',
+                                            zIndex: 10
+                                        }}>
+                                            <AddPhotoButton
+                                                onClick={() => setShowAddPhotoModal(true)}
+                                                className="mini-btn"
+                                            />
+                                        </div>
+                                    )}
+                                        <Slider {...sliderSettings}>
+                                            {currentSpotPhotos?.map((photo, index) => (
+                                                <div className={"current-photo-wrapper"}>
+                                                    <div className={"photo-wrapper"}>
+                                                        <img src={getPhotoUrl(photo.url)} alt="" className={"spot-photo"}
+                                                             onClick={() => {
+                                                                 // setSelectedPhoto(photo)
+                                                                 setSelectedPhotoIndex(index)
+                                                                 setShowModal(true)
+                                                             }}/>
+                                                        <div className={"photo-info-wrapper"}>
+                                                            <p className={"caption"}>{photo.caption}</p>
+                                                            {/*<p className={"author"}>{photo.author.displayName}</p>*/}
+                                                            <p className={"author"}><FaRegUser/> Julia Staniszewska</p>
+                                                        </div>
+
                                                     </div>
                                                 </div>
-                                            </div>
-                                        ))}
-                                    </Slider>
-                                ) : (
-                                    <div className="no-photos">
-                                        {isAuthenticated ? (
-                                            <><h2>Nikt jeszcze nie dodał zdjęcia</h2><p>Chcesz być pierwszy?</p></>
-                                        ) : (
-                                            <><h2>Nikt jeszcze nie dodał zdjęcia</h2><p>Chcesz być pierwszy?</p>
-                                                <button className="btn-login">Zaloguj Się</button>
-                                            </>
-                                        )}
-                                    </div>
-                                )}
+                                            ))}
+                                        </Slider>
+                                    </>
+                                    ) :
+                                    (
+                                        <div className="no-photos">
+                                            {isAuthenticated ? (
+                                                    <>
+                                                        <h2>Nikt jeszcze nie dodał zdjęcia</h2><p>Chcesz być
+                                                        pierwszy?</p>
+                                                        <div style={{marginTop: '15px'}}>
+                                                            <AddPhotoButton onClick={() => setShowAddPhotoModal(true)}/>
+                                                        </div>
+                                                    </>
+                                                ) :
+                                                (
+                                                    <>
+                                                        <h2>Nikt jeszcze nie dodał zdjęcia</h2><p>Chcesz być pierwszy?</p>
+                                                        <LoginButton/>
+                                                    </>
+                                                )}
+
+                                        </div>
+                                    )}
                             </div>
                         </div>
 
@@ -232,18 +244,11 @@ export const MapView = () => {
                     </>
                 )}
             </div>
-
-            <div className={`map-view ${currentSpot ? "with-spot" : "no-spot"}`} style={{flexDirection: 'column'}}> {/* 👈 Ważny flex-direction */}
-                <TagBar onTagSelect={(tag) => setActiveTag(tag)} />
-                <Map 
-                    sendSpotDataToMapView={handleSpotDataFromMap} 
-                    sendPhotosDataToMapView={handlePhotosDataFromMap}
-                    sendCommentsDataToMapView={handleCommentsDataFromMap} 
-                    refreshTrigger={refreshTrigger} 
-                    refreshSpots={refreshSpots}
-                    flyToLocation={mapTargetLocation}
-                    activeTag={activeTag}
-                />
+            <div className={`map-view ${currentSpot ? "with-spot" : "no-spot"}`}>
+                <Map sendSpotDataToMapView={handleSpotDataFromMap} sendPhotosDataToMapView={handlePhotosDataFromMap}
+                     sendCommentsDataToMapView={handleCommentsDataFromMap} refreshTrigger={refreshTrigger}
+                     refreshSpots={refreshSpots}
+                     flyToLocation={mapTargetLocation}/>
 
                 {isAuthenticated && (
                     <div style={{position: 'absolute', bottom: '30px', right: '30px', zIndex: 1000}}>
@@ -260,7 +265,26 @@ export const MapView = () => {
                     initialPhotoIndex={selectedPhotoIndex}
                 />
             )}
-            <CreateSpotModal open={showCreateModal} onClose={() => setShowCreateModal(false)} onSubmit={handleCreateSpot} clickedLocation={newSpotLocation} />
+
+            <CreateSpotModal
+                open={showCreateModal}
+                onClose={() => setShowCreateModal(false)}
+                onSubmit={handleCreateSpot}
+                clickedLocation={newSpotLocation}
+            />
+
+            {currentSpot && (
+                <AddPhotoModal
+                    open={showAddPhotoModal}
+                    onClose={() => setShowAddPhotoModal(false)}
+                    spotId={currentSpot.id}
+                    onUploadSuccess={() => {
+                        setRefreshTrigger(prev => prev + 1);
+                    }}
+                />
+            )}
+
+
         </div>
     );
 }

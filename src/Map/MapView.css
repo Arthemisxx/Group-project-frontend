@@ -1,11 +1,8 @@
-/* ==========================================================================
-   GŁÓWNY WRAPPER WIDOKU MAPY
-   ========================================================================== */
 
 .map-view-wrapper {
     flex: 1;
     display: flex;
-    height: calc(100vh - 74px);   /* mapa + panel zajmują całą wysokość */
+    height: calc(100vh - 74px);
     position: relative;
 }
 
@@ -20,11 +17,6 @@
     width: 100%;
 }
 
-
-/* ==========================================================================
-   PANEL INFORMACYJNY O SPOTCIE
-   ========================================================================== */
-
 .info-view {
     height: calc(100% - 20px);
     background-color: white;
@@ -35,20 +27,18 @@
     flex-direction: column;
     align-items: center;
 
-    overflow: hidden;      /* blokuje przewijanie całej strony */
-    position: relative;    /* konieczne dla przycisku zamknięcia */
+    overflow: hidden;
+    position: relative;
 
     transition: transform 0.6s ease, opacity 0.6s ease, width 0.6s ease;
 }
 
-/* stan otwarty */
 .info-view.open {
     width: max(26%, 380px);
     transform: translateX(0);
     opacity: 1;
 }
 
-/* stan zamknięty */
 .info-view.closed {
     transform: translateX(-100%);
     opacity: 0;
@@ -64,10 +54,6 @@
 
 
 
-/* ==========================================================================
-   SEKCJA ZDJĘĆ I SLICK SLIDER
-   ========================================================================== */
-
 .photos-info-wrapper {
     height: 40%;
     width: 90%;
@@ -76,15 +62,6 @@
     cursor: pointer;
 }
 
-/*.photos-info-wrapper {*/
-/*    width: 90%;*/
-/*    max-height: 280px;*/
-/*    height: auto;*/
-/*    margin-bottom: 20px;*/
-/*    border-radius: 12px;*/
-/*    overflow: hidden;*/
-/*    box-shadow: 0 4px 12px rgba(0,0,0,0.12);*/
-/*}*/
 
 .current-photo-wrapper {
     display: flex !important;
@@ -109,7 +86,6 @@
     justify-content: center;
 }
 
-/* Strzałki slidera */
 .slick-prev {
     left: 3% !important;
     z-index: 1;
@@ -131,10 +107,6 @@
 }
 
 
-/* ==========================================================================
-   ZDJĘCIE + NAKŁADKA AUTORA I OPISU
-   ========================================================================== */
-
 .photo-wrapper {
     position: relative;
     height: 70%;
@@ -154,7 +126,6 @@
     transition: filter 0.3s ease;
 }
 
-/* Nakładka widoczna po najechaniu */
 .photo-info-wrapper {
     position: absolute;
     bottom: 0;
@@ -188,39 +159,19 @@
     color: #fff;
 }
 
-
-/* ==========================================================================
-   OPIS SPOTA
-   ========================================================================== */
-
-/*.spot-info-wrapper {*/
-/*    width: 90%;*/
-/*    display: flex;*/
-/*    flex-direction: column;*/
-/*    flex-grow: 1;*/
-/*}*/
 .spot-info-wrapper {
     width: 90%;
     flex-grow: 0;
     margin-top: 10px;
 }
 
-/*.spot-name {*/
-/*    font-size: 20px;*/
-/*    font-weight: bold;*/
-/*    padding-top: 20px;*/
-/*}*/
 .spot-name {
     font-size: 22px;
     padding-top: 0;
     cursor: pointer;
 }
 
-/*.label {*/
-/*    margin: 0;*/
-/*    color: #888;*/
-/*    padding: 20px 0 0;*/
-/*}*/
+
 .label {
     padding-top: 12px;
     font-size: 13px;
@@ -231,10 +182,6 @@
     text-align: justify;
 }
 
-
-/* ==========================================================================
-   WIDOK "BRAK ZDJĘĆ"
-   ========================================================================== */
 
 .no-photos {
     display: flex;
@@ -252,53 +199,6 @@
 }
 
 
-/* ==========================================================================
-   PRZYCISK ZAMYKANIA PANELU
-   ========================================================================== */
-
-/*.info-close-btn {*/
-/*    position: absolute;*/
-/*    right: -12px;*/
-/*    top: 20px;*/
-
-/*    width: 28px;*/
-/*    height: 48px;*/
-
-/*    background-color: white;*/
-/*    color: #444;*/
-/*    border: 1px solid #ccc;*/
-/*    border-left: none;*/
-
-/*    border-radius: 0 12px 12px 0;*/
-
-/*    font-size: 24px;*/
-/*    font-weight: bold;*/
-/*    cursor: pointer;*/
-
-/*    display: flex;*/
-/*    justify-content: center;*/
-/*    align-items: center;*/
-
-/*    box-shadow: 2px 0 8px rgba(0,0,0,0.2);*/
-/*    transition: background 0.25s, transform 0.25s;*/
-/*}*/
-
-/*.info-close-btn:hover {*/
-/*    background-color: #f2f2f2;*/
-/*    transform: translateX(2px);*/
-/*}*/
-
-
-/* ==========================================================================
-   KOMENTARZE (scrollowane wewnątrz panelu)
-   ========================================================================== */
-
-/*.comments-section {*/
-/*    width: 90%;*/
-/*    margin-top: 20px;*/
-/*    display: flex;*/
-/*    flex-direction: column;*/
-/*}*/
 .comments-section {
     width: 90%;
     margin-top: 20px;
@@ -307,15 +207,6 @@
     border-radius: 12px;
     box-shadow: 0 2px 6px rgba(0,0,0,0.08);
 }
-
-/*.comments-list {*/
-/*    max-height: 180px;         !* przewijane tylko w tej sekcji *!*/
-/*    overflow-y: auto;*/
-/*    padding-right: 6px;*/
-
-/*    scrollbar-width: thin;*/
-/*    scrollbar-color: #bbb transparent;*/
-/*}*/
 
 .comments-list {
     max-height: 160px;
@@ -361,18 +252,6 @@
     padding: 8px 0;
 }
 
-
-/* ==========================================================================
-   PRZYCISK GOOGLE MAPS — ZAWSZE NA DOLE PANELU
-   ========================================================================== */
-
-/*.spot-google-btn-wrapper {*/
-/*    width: 90%;*/
-/*    margin-top: auto;       !* pcha do dołu panelu *!*/
-/*    padding-bottom: 20px;*/
-/*    display: flex;*/
-/*    justify-content: center;*/
-/*}*/
 
 .spot-google-btn-wrapper {
     width: 90%;

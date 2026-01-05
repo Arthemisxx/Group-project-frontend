@@ -2,7 +2,7 @@ import axios from 'axios';
 
 
 const axiosClient = axios.create({
-    baseURL: 'http://localhost:8080',
+    baseURL: 'http://127.0.0.1:8080',
     headers: {
         'Content-Type': 'application/json',
     },
@@ -14,7 +14,7 @@ axiosClient.interceptors.request.use(
     (config) => {
         const isPublic = publicEndpoints.some(endpoint => config.url?.includes(endpoint));
         if(!isPublic) {
-            const token = localStorage.getItem('token'); // Pobieramy token z pamięci
+            const token = localStorage.getItem('token');
             if (token) {
                 config.headers.Authorization = `Bearer ${token}`;
             }

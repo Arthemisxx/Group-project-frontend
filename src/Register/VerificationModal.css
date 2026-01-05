@@ -1,114 +1,153 @@
-.modal-overlay {
+.verification-modal-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    inset: 0;
     background-color: rgba(0, 0, 0, 0.6);
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000;
-    backdrop-filter: blur(2px);
+    z-index: 99999;
+    backdrop-filter: blur(5px);
+    animation: fadeIn 0.2s ease-in-out;
 }
 
-.modal-content {
+.verification-modal-content {
     background: white;
-    padding: 2rem;
-    border-radius: 12px;
+    padding: 2.5rem;
+    border-radius: 16px;
     width: 90%;
     max-width: 400px;
     position: relative;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    display: flex;
+    flex-direction: column;
 }
 
-.modal-close {
+.verification-modal-close {
     position: absolute;
-    top: 10px;
+    top: 15px;
     right: 15px;
     background: none;
     border: none;
-    font-size: 1.5rem;
+    font-size: 2rem;
+    line-height: 1;
     cursor: pointer;
-    color: #666;
+    color: #888;
+    transition: color 0.2s;
 }
 
-h2 {
+.verification-modal-close:hover {
+    color: #000;
+}
+
+.verification-modal-content h2 {
     text-align: center;
     margin-bottom: 1rem;
     color: #333;
+    font-size: 1.5rem;
+    margin-top: 0;
 }
 
-p.info-text {
+.verification-info-text {
     text-align: center;
     margin-bottom: 1.5rem;
     color: #666;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
+    line-height: 1.5;
 }
 
-form {
+.verification-info-text strong {
+    color: #333;
+}
+
+.verification-modal-content form {
     display: flex;
     flex-direction: column;
     gap: 15px;
 }
 
-input {
-    padding: 12px;
+.verification-input {
+    padding: 12px 16px;
     border: 1px solid #ddd;
-    border-radius: 6px;
-    font-size: 1rem;
-    text-align: center; /* Kod ładnie wygląda na środku */
-    letter-spacing: 2px;
+    border-radius: 8px;
+    font-size: 1.2rem;
+    text-align: center;
+    letter-spacing: 4px;
+    background-color: #fafafa;
+    transition: all 0.2s;
+    font-weight: 600;
 }
 
-input:focus {
+.verification-input:focus {
     outline: none;
     border-color: #28a745;
+    background-color: #fff;
+    box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
 }
 
-.btn-submit {
+.verification-btn-submit {
     padding: 12px;
     background-color: #28a745;
     color: white;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     font-size: 1rem;
     cursor: pointer;
-    font-weight: bold;
+    font-weight: 600;
+    margin-top: 5px;
+    transition: background-color 0.2s;
 }
 
-.btn-submit:hover {
+.verification-btn-submit:hover {
     background-color: #218838;
 }
 
-.resend-link {
+.verification-btn-submit:disabled {
+    background-color: #94d3a2;
+    cursor: not-allowed;
+}
+
+.verification-resend-link {
     text-align: center;
-    margin-top: 15px;
+    margin-top: 20px;
     font-size: 0.9rem;
     color: #666;
 }
 
-.resend-link span {
-    color: #007bff;
+.verification-resend-link span {
+    color: #28a745;
     cursor: pointer;
-    text-decoration: underline;
+    text-decoration: none;
+    font-weight: 600;
     margin-left: 5px;
+    transition: text-decoration 0.2s;
 }
 
-.msg-success {
+.verification-resend-link span:hover {
+    text-decoration: underline;
+}
+
+.verification-msg {
+    padding: 10px;
+    border-radius: 8px;
+    text-align: center;
+    margin-bottom: 15px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.verification-msg.success {
     color: #155724;
     background-color: #d4edda;
-    padding: 10px;
-    border-radius: 5px;
-    text-align: center;
-    margin-bottom: 10px;
+    border: 1px solid #c3e6cb;
 }
 
-.msg-error {
+.verification-msg.error {
     color: #721c24;
     background-color: #f8d7da;
-    padding: 10px;
-    border-radius: 5px;
-    text-align: center;
-    margin-bottom: 10px;
+    border: 1px solid #f5c6cb;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
 }

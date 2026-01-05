@@ -9,7 +9,25 @@ import type {Spot} from "../../Utils/Spot.ts";
 import type {Photo} from "../../Utils/Photo.ts";
 import {fetchComments, fetchSpotPhotos, fetchSpotsData} from "../../Utils/api.ts";
 import type {Comment} from "../../Utils/Comment.ts";
+import L from 'leaflet';
 
+const defaultIcon = new L.Icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+});
+
+const selectedIcon = new L.Icon({
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+});
 
 interface SearchProps {
     provider: OpenStreetMapProvider;
@@ -107,13 +125,7 @@ export const Map = ({
    useEffect(() => {
         const loadSpots = async () => {
             try {
-                let response;
-                if (activeTag) {
-                    const res = await fetch(`http://localhost:8080/spots/tag?tagName=${activeTag}`);
-                    response = await res.json();
-                } else {
-                    response = await fetchSpotsData(-90, 90, -180, 180);
-                }
+                const response = await fetchSpotsData(-90, 90, -180, 180);
                 setSpots(response);
             } catch (e) {
                 console.error("Błąd pobierania spotów:", e);
@@ -126,6 +138,7 @@ export const Map = ({
     useEffect(() => {
         if (currentSpot) {
             getComments(currentSpot.id);
+            getPhotos(currentSpot.id);
         }
 
     }, [currentSpot, refreshTrigger]);
@@ -182,7 +195,9 @@ export const Map = ({
                     <MapController onMapReady={setMapInstance}/>
                     {spots?.map(spot => (
                         <Marker key={spot.id}
-                                position={[spot.latitude, spot.longitude]} eventHandlers={{
+                                position={[spot.latitude, spot.longitude]}
+                                icon={currentSpot?.id === spot.id ? selectedIcon : defaultIcon}
+                                eventHandlers={{
                             click: () => {
                                 setCurrentSpot(spot);
                                 getPhotos(spot.id);
