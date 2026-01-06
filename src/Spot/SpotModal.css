@@ -306,6 +306,7 @@
     align-items: center;
     cursor: pointer;
     transition: background 0.2s;
+    padding: 0;
 }
 
 .send-comment-btn:hover {
@@ -344,6 +345,61 @@
     color: white;
 }
 
+
+.modal-actions-row {
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    margin-top: 10px;
+    padding-bottom: 5px;
+}
+
+.action-btn {
+    background: transparent;
+    border: none;
+    outline: none;
+    box-shadow: none;
+    cursor: pointer;
+    font-size: 24px;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #333;
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.save-btn {
+    margin-left: 0;
+}
+
+.like-btn {
+    margin-left: 10px;
+}
+
+
+.action-btn:hover {
+    transform: scale(1.1);
+    color: #000;
+}
+
+.action-btn.active {
+    color: #000;
+}
+
+
+.action-btn:focus,
+.action-btn:active {
+    outline: none !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.action-btn::-moz-focus-inner {
+    border: 0;
+}
+
+
 @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
@@ -371,3 +427,5 @@
         margin-top: 30px;
     }
 }
+
+

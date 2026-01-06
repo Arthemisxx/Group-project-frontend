@@ -10,11 +10,12 @@ import {FaChevronLeft, FaChevronRight, FaPaperPlane, FaUserCircle} from "react-i
 import type {Comment} from "../Utils/Comment.ts";
 import {AddPhotoButton} from "./Photos/AddPhotoButton.tsx";
 import {AddPhotoModal} from "./Photos/AddPhotoModal.tsx";
-import {fetchSpotPhotos} from "../Utils/api.ts";
+import {fetchSpotPhotos, isSpotSavedForLater, removeSpotForLater, saveSpotForLater} from "../Utils/api.ts";
 import {EditSpotButton} from "./EditSpotButton.tsx";
 import {EditSpotModal} from "./EditSpotModal.tsx";
 import {useAuth} from "../Auth/AuthProvider.tsx";
 import { jwtDecode } from "jwt-decode";
+import {FaBookmark, FaRegBookmark, FaRegHeart} from "react-icons/fa6";
 
 interface ModalProps {
     onClose: () => void;
@@ -64,6 +65,8 @@ export const SpotModal = ({ open, onClose, spot, photos, comments, onAddComment,
     const [currentSpot, setCurrentSpot] = useState(spot);
     const {token} = useAuth();
     const [isOwner, setIsOwner] = useState(false);
+    const [isSaved, setIsSaved] = useState(false);
+    const {isAuthenticated} = useAuth();
 
     useEffect(() => {
         if (open) {
@@ -92,6 +95,18 @@ export const SpotModal = ({ open, onClose, spot, photos, comments, onAddComment,
             } else {
                 setIsOwner(false);
             }
+
+            const checkSavedStatus = async () => {
+                    try {
+                        const saved = await isSpotSavedForLater(spot.id);
+                        setIsSaved(saved);
+                    } catch (error) {
+                        console.error("Błąd sprawdzania statusu zapisanego:", error);
+                        setIsSaved(false);
+                    }
+
+            };
+            checkSavedStatus();
         }
     }, [photos, open, initialPhotoIndex, spot, token]);
 
@@ -110,6 +125,24 @@ export const SpotModal = ({ open, onClose, spot, photos, comments, onAddComment,
         if (newComment.trim().length > 0) {
             onAddComment(newComment);
             setNewComment("");
+        }
+    };
+
+    const handleToggleSave = async () => {
+
+        const previousState = isSaved;
+        setIsSaved(!isSaved);
+
+        try {
+            if (previousState) {
+                await removeSpotForLater(currentSpot.id);
+            } else {
+                await saveSpotForLater(currentSpot.id);
+            }
+        } catch (error) {
+            console.error("Błąd zapisu:", error);
+            setIsSaved(previousState);
+            alert("Nie udało się zmienić statusu.");
         }
     };
 
@@ -172,7 +205,6 @@ export const SpotModal = ({ open, onClose, spot, photos, comments, onAddComment,
                             gap: '10px'
                         }}>
                             <h2 className="spot-title">{currentSpot.title}</h2>
-                            {/* TODO odkomentować jak zmienią token na backendzie */}
                             {isOwner && (
                                 <EditSpotButton onClick={() => setShowEditModal(true)} />
                             )}
@@ -180,6 +212,26 @@ export const SpotModal = ({ open, onClose, spot, photos, comments, onAddComment,
                         <div className="section">
                             <p className="label">O miejscu</p>
                             <p className="spot-description">{currentSpot.description}</p>
+                            {isAuthenticated && (
+                                <div className="modal-actions-row">
+                                    <button
+                                        className={`action-btn save-btn ${isSaved ? 'active' : ''}`}
+                                        onClick={handleToggleSave}
+                                        title={isSaved ? "Usuń z zapisanych" : "Zapisz na później"}
+                                    >
+                                        {isSaved ? <FaBookmark/> : <FaRegBookmark/>}
+                                    </button>
+
+                                    <button
+                                        className="action-btn like-btn"
+                                        // onClick={handleLikeClick}
+                                        title="Polub to miejsce"
+                                    >
+                                        <FaRegHeart/>
+                                    </button>
+                                </div>
+                            )}
+
                         </div>
                     </div>
 
@@ -236,8 +288,8 @@ export const SpotModal = ({ open, onClose, spot, photos, comments, onAddComment,
                                 <p className="no-comments-text">Bądź pierwszy i skomentuj to miejsce!</p>
                             )}
                         </div>
-
-                        <div className="add-comment-wrapper">
+                        {isAuthenticated && (
+                            <div className="add-comment-wrapper">
                             <textarea
                                 className="comment-input"
                                 placeholder="Dodaj komentarz..."
@@ -245,14 +297,17 @@ export const SpotModal = ({ open, onClose, spot, photos, comments, onAddComment,
                                 onChange={(e) => setNewComment(e.target.value)}
                                 rows={2}
                             />
-                            <button
-                                className="send-comment-btn"
-                                onClick={handleSendComment}
-                                disabled={newComment.trim().length === 0}
-                            >
-                                <FaPaperPlane/>
-                            </button>
-                        </div>
+                                <button
+                                    className="send-comment-btn"
+                                    onClick={handleSendComment}
+                                    disabled={newComment.trim().length === 0}
+                                >
+                                    <FaPaperPlane/>
+                                </button>
+                            </div>
+                        )}
+
+
                     </div>
 
                     <div className="section google-btn-wrapper">
@@ -264,14 +319,14 @@ export const SpotModal = ({ open, onClose, spot, photos, comments, onAddComment,
             </div>
 
 
-                <AddPhotoModal
-                    open={showAddPhotoModal}
-                    onClose={() => setShowAddPhotoModal(false)}
-                    spotId={spot.id}
-                    onUploadSuccess={() => {
-                        handleRefreshPhotos();
-                    }}
-                />
+            <AddPhotoModal
+                open={showAddPhotoModal}
+                onClose={() => setShowAddPhotoModal(false)}
+                spotId={spot.id}
+                onUploadSuccess={() => {
+                    handleRefreshPhotos();
+                }}
+            />
 
             <EditSpotModal
                 open={showEditModal}

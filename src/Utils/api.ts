@@ -79,4 +79,16 @@ export const deletePhoto = async (id: number): Promise<void> => {
     await axiosClient.delete(`photos/${id}`);
 }
 
+export const saveSpotForLater = async (id: number) : Promise<void> => {
+    await axiosClient.post(`for-later/${id}`);
+}
+
+export const removeSpotForLater = async (id: number) : Promise<void> => {
+    await axiosClient.delete(`for-later/${id}`);
+}
+
+export const isSpotSavedForLater = async (id: number) : Promise<boolean> => {
+    const response = await axiosClient.get(`for-later/${id}`);
+    return response.data;
+}
 
