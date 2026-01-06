@@ -1,11 +1,13 @@
-import { Body } from "../Body/Body";
+import { Body } from "./Body/Body";
 import {Explore} from "../Explore/Explore.tsx";
+import {Footer} from "./Footer/Footer.tsx";
 
 export default function Home() {
   return (
     <div>
-      <Body />
+        <Body />
         <Explore/>
+        <Footer/>
     </div>
   );
 }
