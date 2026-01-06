@@ -168,6 +168,7 @@
 .spot-info-inner-wrapper{
     display: flex;
     flex-direction: row;
+    justify-content: space-between;
 
 }
 

@@ -6,11 +6,18 @@ import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { useState, useEffect } from "react";
-import {FaChevronLeft, FaChevronRight, FaPaperPlane, FaUserCircle} from "react-icons/fa";
+import {FaChevronLeft, FaChevronRight, FaHeart, FaPaperPlane, FaUserCircle} from "react-icons/fa";
 import type {Comment} from "../Utils/Comment.ts";
 import {AddPhotoButton} from "./Photos/AddPhotoButton.tsx";
 import {AddPhotoModal} from "./Photos/AddPhotoModal.tsx";
-import {fetchSpotPhotos, isSpotSavedForLater, removeSpotForLater, saveSpotForLater} from "../Utils/api.ts";
+import {
+    dislikeSpot,
+    fetchSpotPhotos, getSpotLikesCount, isSpotLiked,
+    isSpotSavedForLater,
+    likeSpot,
+    removeSpotForLater,
+    saveSpotForLater
+} from "../Utils/api.ts";
 import {EditSpotButton} from "./EditSpotButton.tsx";
 import {EditSpotModal} from "./EditSpotModal.tsx";
 import {useAuth} from "../Auth/AuthProvider.tsx";
@@ -66,6 +73,8 @@ export const SpotModal = ({ open, onClose, spot, photos, comments, onAddComment,
     const {token} = useAuth();
     const [isOwner, setIsOwner] = useState(false);
     const [isSaved, setIsSaved] = useState(false);
+    const [isLiked, setIsLiked] = useState(false);
+    const [likes, setLikes] = useState<number>(0);
     const {isAuthenticated} = useAuth();
 
     useEffect(() => {
@@ -100,15 +109,26 @@ export const SpotModal = ({ open, onClose, spot, photos, comments, onAddComment,
                     try {
                         const saved = await isSpotSavedForLater(spot.id);
                         setIsSaved(saved);
+                        const liked = await isSpotLiked(currentSpot.id);
+                        setIsLiked(liked);
+                        const likes = await getSpotLikesCount(currentSpot.id);
+                        setLikes(likes);
+                        setLikes(likes);
+
+
                     } catch (error) {
                         console.error("Błąd sprawdzania statusu zapisanego:", error);
                         setIsSaved(false);
+                        setIsLiked(false);
+
                     }
 
             };
             checkSavedStatus();
         }
     }, [photos, open, initialPhotoIndex, spot, token]);
+
+
 
     const handleRefreshPhotos = async () => {
         try {
@@ -144,6 +164,31 @@ export const SpotModal = ({ open, onClose, spot, photos, comments, onAddComment,
             setIsSaved(previousState);
             alert("Nie udało się zmienić statusu.");
         }
+    };
+
+    const handleToggleLike = async () => {
+        if( !isAuthenticated ){
+            alert("Zaloguj się aby polubić!");
+            return;
+        }
+
+        const previousState = isLiked;
+        setIsLiked(!isLiked);
+
+        try {
+            if (previousState) {
+                await dislikeSpot(currentSpot.id);
+            } else {
+                await likeSpot(currentSpot.id);
+            }
+        } catch (error) {
+            console.error("Błąd zapisu:", error);
+            setIsLiked(previousState);
+            alert("Nie udało się polubić.");
+        }
+
+        const likes = await getSpotLikesCount(currentSpot.id);
+        setLikes(likes);
     };
 
     if (!open) return null;
@@ -212,8 +257,9 @@ export const SpotModal = ({ open, onClose, spot, photos, comments, onAddComment,
                         <div className="section">
                             <p className="label">O miejscu</p>
                             <p className="spot-description">{currentSpot.description}</p>
-                            {isAuthenticated && (
+
                                 <div className="modal-actions-row">
+                                    {isAuthenticated && (
                                     <button
                                         className={`action-btn save-btn ${isSaved ? 'active' : ''}`}
                                         onClick={handleToggleSave}
@@ -221,16 +267,18 @@ export const SpotModal = ({ open, onClose, spot, photos, comments, onAddComment,
                                     >
                                         {isSaved ? <FaBookmark/> : <FaRegBookmark/>}
                                     </button>
+                                    )}
 
                                     <button
-                                        className="action-btn like-btn"
-                                        // onClick={handleLikeClick}
-                                        title="Polub to miejsce"
+                                        className={`action-btn like-btn ${isLiked ? 'active' : ''}`}
+                                        onClick={handleToggleLike}
+                                        title={isLiked ? "Usuń z polubionych" : "Polub"}
                                     >
-                                        <FaRegHeart/>
+                                        <p style={{paddingRight: '10px'}}>{likes}</p>{isLiked ? <FaHeart/> :
+                                        <FaRegHeart/>}
                                     </button>
                                 </div>
-                            )}
+
 
                         </div>
                     </div>

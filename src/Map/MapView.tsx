@@ -8,14 +8,16 @@ import type {Photo} from "../Utils/Photo.ts";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-import {FaPaperPlane, FaRegUser} from "react-icons/fa";
+import {FaHeart, FaPaperPlane, FaRegUser} from "react-icons/fa";
 import {SpotModal} from "../Spot/SpotModal.tsx";
 import type {Comment} from "../Utils/Comment.ts";
 import type {PostComment} from "../Utils/postComment.ts";
 import {
+    dislikeSpot,
+    getSpotLikesCount,
     insertComment,
-    insertSpot,
-    isSpotSavedForLater,
+    insertSpot, isSpotLiked,
+    isSpotSavedForLater, likeSpot,
     removeSpotForLater,
     saveSpotForLater,
     uploadSpotPhoto
@@ -26,7 +28,7 @@ import {CreateSpotModal, type PhotoDraft} from "../Spot/CreateSpotModal.tsx";
 import {AddPhotoButton} from "../Spot/Photos/AddPhotoButton.tsx";
 import {AddPhotoModal} from "../Spot/Photos/AddPhotoModal.tsx";
 import {LoginButton} from "../Login/LoginButton.tsx";
-import { FaRegBookmark, FaBookmark, FaRegHeart } from "react-icons/fa6";
+import {FaRegBookmark, FaBookmark, FaRegHeart} from "react-icons/fa6";
 
 export const MapView = () => {
     const [currentSpot, setCurrentSpot] = useState<Spot | null>(null)
@@ -40,65 +42,89 @@ export const MapView = () => {
     const [mapTargetLocation, setMapTargetLocation] = useState<{ lat: number, lng: number } | null>(null);
     const [newComment, setNewComment] = useState("");
     const [isSaved, setIsSaved] = useState(false);
+    const [isLiked, setIsLiked] = useState(false);
+    const [likes, setLikes] = useState<number>(0);
 
     const {isAuthenticated} = useAuth();
 
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [newSpotLocation, setNewSpotLocation] = useState<{ lat: number, lng: number } | null>(null);
 
-    // NOWE - obsługa wyszukiwania z URL
     const [searchParams] = useSearchParams();
     const [searchedLocation, setSearchedLocation] = useState<string>('');
 
-    // Odbierz parametr search z URL
-    useEffect(() => {
-        const checkSavedStatus = async () => {
-            if (currentSpot && isAuthenticated) {
-                try {
-                    const saved = await isSpotSavedForLater(currentSpot.id);
-                    setIsSaved(saved);
-                } catch (error) {
-                    console.error("Błąd sprawdzania statusu zapisanego:", error);
-                    setIsSaved(false);
-                }
-            } else {
-                setIsSaved(false); // Resetujemy jeśli brak spota lub użytkownik wylogowany
+    const checkSavedAndLikedStatus = async () => {
+        if (currentSpot && isAuthenticated) {
+            try {
+                const saved = await isSpotSavedForLater(currentSpot.id);
+                const liked = await isSpotLiked(currentSpot.id);
+                const likes = await getSpotLikesCount(currentSpot.id);
+                setIsSaved(saved);
+                setIsLiked(liked);
+                setLikes(likes);
+            } catch (error) {
+                console.error("Błąd sprawdzania statusu zapisanego:", error);
+                setIsSaved(false);
+                setIsLiked(false);
+                setLikes(0);
             }
-        };
+        } else {
+            setIsSaved(false);
+            setIsLiked(false);
+            setLikes(0);
+        }
+    };
 
-        checkSavedStatus();
+    useEffect(() => {
+               checkSavedAndLikedStatus();
     }, [currentSpot, isAuthenticated]);
 
     const handleToggleSave = async () => {
-        if (!isAuthenticated) {
-            alert("Zaloguj się, aby zapisać miejsce na później!");
-            // Opcjonalnie: możesz tu otwierać modal logowania, np. loginButtonRef.current.click()
-            return;
-        }
+         if (!currentSpot) return;
 
-        if (!currentSpot) return;
-
-        // Opcjonalne: Optymistyczna aktualizacja UI (zmieniamy ikonę zanim API odpowie)
         const previousState = isSaved;
         setIsSaved(!isSaved);
 
         try {
             if (previousState) {
-                // Było zapisane -> Usuwamy
                 await removeSpotForLater(currentSpot.id);
             } else {
-                // Nie było zapisane -> Zapisujemy
                 await saveSpotForLater(currentSpot.id);
             }
         } catch (error) {
             console.error("Błąd podczas zapisywania/usuwania:", error);
-            // Cofamy zmianę w razie błędu
             setIsSaved(previousState);
             alert("Wystąpił błąd połączenia.");
         }
     };
 
-    // Odbierz parametr search z URL
+    const handleToggleLike = async () => {
+        if(!isAuthenticated){
+            alert("Zaloguj się aby polubić!");
+            return;
+        }
+
+        if (!currentSpot) return;
+
+        const previousState = isLiked;
+        setIsLiked(!isLiked);
+
+        try {
+            if (previousState) {
+                await dislikeSpot(currentSpot.id);
+            } else {
+                await likeSpot(currentSpot.id);
+            }
+        } catch (error) {
+            console.error("Wystąpił błąd:", error);
+            setIsLiked(previousState);
+            alert("Wystąpił błąd połączenia.");
+        }
+        const likes = await getSpotLikesCount(currentSpot.id);
+        setLikes(likes);
+
+    }
+
     useEffect(() => {
         const searchQuery = searchParams.get('search');
         if (searchQuery) {
@@ -108,7 +134,6 @@ export const MapView = () => {
         }
     }, [searchParams]);
 
-    // Funkcja wyszukująca miejsce
     const searchLocationOnMap = async (query: string) => {
         try {
             const response = await fetch(
@@ -122,7 +147,7 @@ export const MapView = () => {
                 const lng = parseFloat(place.lon);
 
                 console.log(`Znaleziono: ${place.display_name}`);
-                setMapTargetLocation({ lat, lng });
+                setMapTargetLocation({lat, lng});
             } else {
                 alert(`Nie znaleziono miejsca: ${query}`);
             }
@@ -272,7 +297,8 @@ export const MapView = () => {
                                                 {currentSpotPhotos?.map((photo, index) => (
                                                     <div className={"current-photo-wrapper"}>
                                                         <div className={"photo-wrapper"}>
-                                                            <img src={getPhotoUrl(photo.url)} alt="" className={"spot-photo"}
+                                                            <img src={getPhotoUrl(photo.url)} alt=""
+                                                                 className={"spot-photo"}
                                                                  onClick={() => {
                                                                      // setSelectedPhoto(photo)
                                                                      setSelectedPhotoIndex(index)
@@ -280,7 +306,8 @@ export const MapView = () => {
                                                                  }}/>
                                                             <div className={"photo-info-wrapper"}>
                                                                 <p className={"caption"}>{photo.caption}</p>
-                                                                <p className={"author"}><FaRegUser/> {photo.author.displayName}</p>
+                                                                <p className={"author"}>
+                                                                    <FaRegUser/> {photo.author.displayName}</p>
                                                             </div>
 
                                                         </div>
@@ -303,7 +330,8 @@ export const MapView = () => {
                                                 ) :
                                                 (
                                                     <>
-                                                        <h2>Nikt jeszcze nie dodał zdjęcia</h2><p>Chcesz być pierwszy?</p>
+                                                        <h2>Nikt jeszcze nie dodał zdjęcia</h2><p>Chcesz być
+                                                        pierwszy?</p>
                                                         <LoginButton/>
                                                     </>
                                                 )}
@@ -320,17 +348,28 @@ export const MapView = () => {
                                        setSelectedPhotoIndex(0)
                                        setShowModal(true)
                                    }}>{currentSpot?.title}</p>
-                                <div style={{display: 'flex', alignItems: 'center'}}>
-                                    <button
-                                        className={`spot-info-for-later ${isSaved ? "active" : ""}`}
-                                        onClick={handleToggleSave}
-                                        title={isSaved ? "Usuń z zapisanych" : "Zapisz na później"}
-                                    >
-                                        {isSaved ? <FaBookmark/> : <FaRegBookmark/>}
-                                    </button>
 
-                                    <button className={"spot-info-like"}><FaRegHeart/></button>
-                                </div>
+
+                                    <div style={{display: 'flex', alignItems: 'center'}}>
+                                        { isAuthenticated && (
+                                        <button
+                                            className={`spot-info-for-later ${isSaved ? "active" : ""}`}
+                                            onClick={handleToggleSave}
+                                            title={isSaved ? "Usuń z zapisanych" : "Zapisz na później"}
+                                        >
+                                            {isSaved ? <FaBookmark/> : <FaRegBookmark/>}
+                                        </button>
+                                        )}
+
+                                        <button
+                                            className={`spot-info-like ${isLiked ? "active" : ""}`}
+                                            onClick={handleToggleLike}
+                                            title={isLiked ? "Usuń z polubionych" : "Polub"}
+                                        >
+                                            <p style={{paddingRight: '10px'}}>{likes}</p>{isLiked ? <FaHeart/> : <FaRegHeart/>}
+                                        </button>
+                                    </div>
+
 
 
                             </div>
@@ -403,7 +442,10 @@ export const MapView = () => {
             {showModal && currentSpot && (
                 <SpotModal
                     open={showModal}
-                    onClose={() => setShowModal(false)}
+                    onClose={() => {
+                        setShowModal(false);
+                        checkSavedAndLikedStatus();
+                    }}
                     spot={currentSpot}
                     photos={currentSpotPhotos}
                     comments={currentSpotComments}
@@ -422,7 +464,11 @@ export const MapView = () => {
             {currentSpot && (
                 <AddPhotoModal
                     open={showAddPhotoModal}
-                    onClose={() => setShowAddPhotoModal(false)}
+                    onClose={() => {
+                        setShowAddPhotoModal(false);
+
+
+                    }}
                     spotId={currentSpot.id}
                     onUploadSuccess={() => {
                         setRefreshTrigger(prev => prev + 1);
