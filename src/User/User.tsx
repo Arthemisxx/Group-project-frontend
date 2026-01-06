@@ -8,6 +8,7 @@ import { fetchSpotPhotos, fetchComments, insertComment } from '../Utils/api';
 import type { Spot } from '../Utils/Spot';
 import type { Photo } from '../Utils/Photo';
 import type { Comment } from '../Utils/Comment';
+import { useAuth } from '../Auth/AuthProvider.tsx';  // <- DODAJ IMPORT
 
 interface FullUserProfile extends UserData {
     id: number;
@@ -24,7 +25,6 @@ interface SpotItem {
     img?: string;
 }
 
-
 interface PhotoItem {
     id: number;
     url?: string;
@@ -37,6 +37,7 @@ type TabType = 'spots' | 'photos' | 'saved';
 
 const User = () => {
     const navigate = useNavigate();
+    const { logout } = useAuth();  // <- DODAJ TO
 
     const [user, setUser] = useState<FullUserProfile | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
@@ -74,7 +75,6 @@ const User = () => {
                     setUser(meData as FullUserProfile);
                 }
 
-
                 try {
                     const sR = await axiosClient.get('/users/me/spots');
                     const rawSpots = sR.data as SpotItem[];
@@ -93,12 +93,10 @@ const User = () => {
                     setSpots(spotsWithImages);
                 } catch (e) { console.error(e); }
 
-
                 try {
                     const pR = await axiosClient.get('/users/me/photos');
                     setPhotos(pR.data as PhotoItem[]);
                 } catch (e) { console.error(e); }
-
 
                 try {
                     const svR = await axiosClient.get('/users/me/saved');
@@ -137,7 +135,6 @@ const User = () => {
 
     const handleUpdateProfile = async (updatedData: Partial<UserData>) => {
         try {
-
             const response = await axiosClient.put('/users/me', updatedData);
             setUser(prev => prev ? { ...prev, ...response.data } : null);
         } catch (err) {
@@ -180,6 +177,12 @@ const User = () => {
         }
     };
 
+    // <- DODAJ FUNKCJĘ WYLOGOWANIA
+    const handleLogout = () => {
+        logout();
+        navigate('/');
+    };
+
     const getAvatarSrc = (url: string | null | undefined) => {
         if (!url) return `https://ui-avatars.com/api/?name=${user?.email || 'User'}&background=random`;
         if (url.startsWith('/uploads')) return `http://localhost:8080${url}`;
@@ -200,7 +203,6 @@ const User = () => {
     const renderCard = (type: 'spot' | 'photo', item: CardItem) => {
         let imageUrl: string | undefined;
         let titleText: string = 'Photo';
-
 
         const BACKEND_URL = 'http://localhost:8080';
 
@@ -229,12 +231,11 @@ const User = () => {
                     if (type === 'spot') {
                         handleOpenSpot(item.id);
                     } else {
-                        // OBSŁUGA KLIKNIĘCIA W ZDJĘCIE
                         const photo = item as PhotoItem;
                         if (photo.spotId) {
                             handleOpenSpot(photo.spotId);
                         } else {
-                            console.warn("Brak spotId w zdjęciu (sprawdź backend PhotoService)");
+                            console.warn("Brak spotId w zdjęciu");
                         }
                     }
                 }}
@@ -318,6 +319,28 @@ const User = () => {
                         <p className="bio-text">{user.bio || 'Użytkownik nie dodał jeszcze opisu.'}</p>
                         <button className="btn-primary-outline" onClick={() => setIsEditing(true)}>
                             Edytuj profil
+                        </button>
+
+                        {/* <- DODAJ PRZYCISK WYLOGUJ */}
+                        <button
+                            className="btn-logout"
+                            onClick={handleLogout}
+                            style={{
+                                marginTop: '10px',
+                                width: '100%',
+                                padding: '10px',
+                                background: '#dc3545',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '8px',
+                                cursor: 'pointer',
+                                fontWeight: '600',
+                                transition: 'background 0.2s'
+                            }}
+                            onMouseOver={(e) => e.currentTarget.style.background = '#c82333'}
+                            onMouseOut={(e) => e.currentTarget.style.background = '#dc3545'}
+                        >
+                            Wyloguj się
                         </button>
                     </div>
 
