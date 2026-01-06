@@ -4,7 +4,7 @@ import './User.css';
 import EditProfileModal, { type UserData } from './EditProfileModal';
 import { SpotModal } from '../Spot/SpotModal';
 import axiosClient from '../Auth/axiosClient';
-import { fetchSpotPhotos, fetchComments, insertComment } from '../Utils/api';
+import {fetchSpotPhotos, fetchComments, insertComment, getSpotsSavedForLater} from '../Utils/api';
 import type { Spot } from '../Utils/Spot';
 import type { Photo } from '../Utils/Photo';
 import type { Comment } from '../Utils/Comment';
@@ -53,6 +53,8 @@ const User = () => {
     const [spotPhotos, setSpotPhotos] = useState<Photo[]>([]);
     const [spotComments, setSpotComments] = useState<Comment[]>([]);
 
+    const [refreshTrigger, setRefreshTrigger] = useState<number>(0)
+
     useEffect(() => {
         const fetchAllData = async () => {
             try {
@@ -99,24 +101,52 @@ const User = () => {
                     setPhotos(pR.data as PhotoItem[]);
                 } catch (e) { console.error(e); }
 
-
                 try {
-                    const svR = await axiosClient.get('/users/me/saved');
-                    const rawSaved = svR.data as SpotItem[];
+                    const savedSpotsData = await getSpotsSavedForLater();
+                    const savedWithImages = await Promise.all(savedSpotsData.map(async (spot: any) => {
+                        let imgUrl = undefined;
 
-                    const savedWithImages = await Promise.all(rawSaved.map(async (spot: SpotItem) => {
                         try {
                             const photos = await fetchSpotPhotos(spot.id);
                             if (photos && photos.length > 0) {
-                                return { ...spot, img: photos[0].url };
+                                imgUrl = photos[0].url;
                             }
-                        } catch {
-
+                        } catch (e) {
                         }
-                        return spot;
+
+                        return {
+                            id: spot.id,
+                            title: spot.title,
+                            img: imgUrl
+                        };
                     }));
+
                     setSaved(savedWithImages);
-                } catch (e) { console.error(e); }
+                } catch (e) {
+                    console.error("Błąd pobierania zapisanych spotów:", e);
+                    setSaved([]);
+                }
+
+                //
+                // try {
+                //     const svR = await axiosClient.get('/users/me/saved');
+                //     const rawSaved = svR.data as SpotItem[];
+                //
+                //     const savedWithImages = await Promise.all(rawSaved.map(async (spot: SpotItem) => {
+                //         try {
+                //             const photos = await fetchSpotPhotos(spot.id);
+                //             if (photos && photos.length > 0) {
+                //                 return { ...spot, img: photos[0].url };
+                //             }
+                //         } catch {
+                //
+                //         }
+                //         return spot;
+                //     }));
+                //     setSaved(savedWithImages);
+                // } catch (e) { console.error(e); }
+
+
 
             } catch (err: unknown) {
                 console.error(err);
@@ -133,7 +163,7 @@ const User = () => {
             }
         };
         fetchAllData();
-    }, [navigate]);
+    }, [navigate, refreshTrigger]);
 
     const handleUpdateProfile = async (updatedData: Partial<UserData>) => {
         try {
@@ -229,7 +259,6 @@ const User = () => {
                     if (type === 'spot') {
                         handleOpenSpot(item.id);
                     } else {
-                        // OBSŁUGA KLIKNIĘCIA W ZDJĘCIE
                         const photo = item as PhotoItem;
                         if (photo.spotId) {
                             handleOpenSpot(photo.spotId);
@@ -355,7 +384,10 @@ const User = () => {
             {isSpotModalOpen && fullSpot && (
                 <SpotModal
                     open={isSpotModalOpen}
-                    onClose={() => setSpotModalOpen(false)}
+                    onClose={() => {
+                        setSpotModalOpen(false)
+                        setRefreshTrigger(prev => prev + 1);
+                    }}
                     spot={fullSpot}
                     photos={spotPhotos}
                     comments={spotComments}

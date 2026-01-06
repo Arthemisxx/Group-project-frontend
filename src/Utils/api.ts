@@ -92,6 +92,11 @@ export const isSpotSavedForLater = async (id: number) : Promise<boolean> => {
     return response.data;
 }
 
+export const getSpotsSavedForLater = async () : Promise<Spot[]> => {
+    const response = await axiosClient.get(`for-later`);
+    return response.data;
+}
+
 export const getSpotLikesCount = async (id: number) : Promise<number> => {
     const response = await axiosClient.get(`likes/spots/${id}`);
     return response.data;
