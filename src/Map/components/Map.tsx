@@ -10,6 +10,7 @@ import type {Photo} from "../../Utils/Photo.ts";
 import {fetchComments, fetchSpotPhotos, fetchSpotsData} from "../../Utils/api.ts";
 import type {Comment} from "../../Utils/Comment.ts";
 import L from 'leaflet';
+import { useLocation } from "react-router-dom";
 
 const defaultIcon = new L.Icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
@@ -94,6 +95,36 @@ export const Map = ({
     const [mapInstance, setMapInstance] = useState<any>(null);
     const [currentSpot, setCurrentSpot] = useState<Spot | null>(null)
     const [currentSpotComments, setCurrentSpotComments] = useState<Comment[]>([])
+    const location = useLocation();
+
+    useEffect(() => {
+
+        if (location.state && mapInstance) {
+            const state = location.state as { focusLat: number; focusLng: number; focusSpotId: number };
+
+
+            if (state.focusLat && state.focusLng) {
+                // @ts-ignore
+                mapInstance.flyTo([state.focusLat, state.focusLng], 15, {
+                    duration: 1.5
+                });
+
+
+                if (spots && state.focusSpotId) {
+                    const spotToSelect = spots.find(s => s.id === state.focusSpotId);
+                    if (spotToSelect) {
+                        setCurrentSpot(spotToSelect);
+
+                        getPhotos(spotToSelect.id);
+                        getComments(spotToSelect.id);
+                    }
+                }
+
+
+                window.history.replaceState({}, document.title);
+            }
+        }
+    }, [location, mapInstance, spots]);
 
     useEffect(() => {
         sendSpotDataToMapView(currentSpot);

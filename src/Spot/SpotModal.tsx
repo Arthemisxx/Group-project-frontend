@@ -6,7 +6,8 @@ import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { useState, useEffect } from "react";
-import {FaChevronLeft, FaChevronRight, FaHeart, FaPaperPlane, FaUserCircle} from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+import {FaChevronLeft, FaChevronRight, FaPaperPlane, FaUserCircle, FaMapMarkedAlt} from "react-icons/fa";
 import type {Comment} from "../Utils/Comment.ts";
 import {AddPhotoButton} from "./Photos/AddPhotoButton.tsx";
 import {AddPhotoModal} from "./Photos/AddPhotoModal.tsx";
@@ -32,6 +33,7 @@ interface ModalProps {
     comments: Comment[];
     onAddComment: (content: string) => void;
     initialPhotoIndex?: number;
+    showMapButton?: boolean;
 }
 
 
@@ -63,7 +65,8 @@ const PrevArrow = (props: any) => {
     );
 };
 
-export const SpotModal = ({ open, onClose, spot, photos, comments, onAddComment, initialPhotoIndex = 0 }: ModalProps) => {
+export const SpotModal = ({ open, onClose, spot, photos, comments, onAddComment, initialPhotoIndex = 0, showMapButton=false }: ModalProps) => {
+    const navigate = useNavigate();
     const [activeSlide, setActiveSlide] = useState(initialPhotoIndex);
     const [newComment, setNewComment] = useState("");
     const [showAddPhotoModal, setShowAddPhotoModal] = useState(false);
@@ -147,50 +150,16 @@ export const SpotModal = ({ open, onClose, spot, photos, comments, onAddComment,
             setNewComment("");
         }
     };
-
-    const handleToggleSave = async () => {
-
-        const previousState = isSaved;
-        setIsSaved(!isSaved);
-
-        try {
-            if (previousState) {
-                await removeSpotForLater(currentSpot.id);
-            } else {
-                await saveSpotForLater(currentSpot.id);
+    const handleNavigateToMap = () => {
+        onClose();
+        navigate('/mapa', {
+            state: {
+                focusSpotId: spot.id,
+                focusLat: spot.latitude,
+                focusLng: spot.longitude
             }
-        } catch (error) {
-            console.error("Błąd zapisu:", error);
-            setIsSaved(previousState);
-            alert("Nie udało się zmienić statusu.");
-        }
+        });
     };
-
-    const handleToggleLike = async () => {
-        if( !isAuthenticated ){
-            alert("Zaloguj się aby polubić!");
-            return;
-        }
-
-        const previousState = isLiked;
-        setIsLiked(!isLiked);
-
-        try {
-            if (previousState) {
-                await dislikeSpot(currentSpot.id);
-            } else {
-                await likeSpot(currentSpot.id);
-            }
-        } catch (error) {
-            console.error("Błąd zapisu:", error);
-            setIsLiked(previousState);
-            alert("Nie udało się polubić.");
-        }
-
-        const likes = await getSpotLikesCount(currentSpot.id);
-        setLikes(likes);
-    };
-
     if (!open) return null;
 
     const settings = {
@@ -251,7 +220,7 @@ export const SpotModal = ({ open, onClose, spot, photos, comments, onAddComment,
                         }}>
                             <h2 className="spot-title">{currentSpot.title}</h2>
                             {isOwner && (
-                                <EditSpotButton onClick={() => setShowEditModal(true)} />
+                                <EditSpotButton onClick={() => setShowEditModal(true)}/>
                             )}
                         </div>
                         <div className="section">
@@ -358,8 +327,19 @@ export const SpotModal = ({ open, onClose, spot, photos, comments, onAddComment,
 
                     </div>
 
-                    <div className="section google-btn-wrapper">
-                        <GoogleButton lat={spot.latitude} long={spot.longitude}/>
+                    <div className="section action-buttons-wrapper">
+
+
+                        {showMapButton && (
+                            <button className="app-map-btn" onClick={handleNavigateToMap}>
+                                <FaMapMarkedAlt style={{marginRight: '8px'}}/>
+                                Pokaż na mapie
+                            </button>
+                        )}
+
+                        <div className="google-btn-container">
+                            <GoogleButton lat={spot.latitude} long={spot.longitude}/>
+                        </div>
                     </div>
                 </div>
 
