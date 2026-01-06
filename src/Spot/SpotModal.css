@@ -344,6 +344,54 @@
     color: white;
 }
 
+
+.action-buttons-wrapper {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    width: 100%;
+}
+
+
+.app-map-btn {
+    height: 46px;
+    border-radius: 50px;
+    padding: 0 25px;
+
+    background-color: #556070;
+    color: white;
+    border: none;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    white-space: nowrap;
+
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+    transition: background 0.2s;
+}
+
+.app-map-btn:hover {
+    background-color: #434c59;
+}
+
+
+.google-btn-container {
+    display: block;
+}
+
+
 @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }

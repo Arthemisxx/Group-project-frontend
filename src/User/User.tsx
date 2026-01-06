@@ -360,6 +360,7 @@ const User = () => {
                     photos={spotPhotos}
                     comments={spotComments}
                     onAddComment={handleAddComment}
+                    showMapButton={true}
                 />
             )}
         </div>

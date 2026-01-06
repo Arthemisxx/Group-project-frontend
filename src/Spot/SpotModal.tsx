@@ -6,7 +6,8 @@ import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { useState, useEffect } from "react";
-import {FaChevronLeft, FaChevronRight, FaPaperPlane, FaUserCircle} from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+import {FaChevronLeft, FaChevronRight, FaPaperPlane, FaUserCircle, FaMapMarkedAlt} from "react-icons/fa";
 import type {Comment} from "../Utils/Comment.ts";
 import {AddPhotoButton} from "./Photos/AddPhotoButton.tsx";
 import {AddPhotoModal} from "./Photos/AddPhotoModal.tsx";
@@ -24,6 +25,7 @@ interface ModalProps {
     comments: Comment[];
     onAddComment: (content: string) => void;
     initialPhotoIndex?: number;
+    showMapButton?: boolean;
 }
 
 
@@ -55,7 +57,8 @@ const PrevArrow = (props: any) => {
     );
 };
 
-export const SpotModal = ({ open, onClose, spot, photos, comments, onAddComment, initialPhotoIndex = 0 }: ModalProps) => {
+export const SpotModal = ({ open, onClose, spot, photos, comments, onAddComment, initialPhotoIndex = 0, showMapButton=false }: ModalProps) => {
+    const navigate = useNavigate();
     const [activeSlide, setActiveSlide] = useState(initialPhotoIndex);
     const [newComment, setNewComment] = useState("");
     const [showAddPhotoModal, setShowAddPhotoModal] = useState(false);
@@ -112,7 +115,16 @@ export const SpotModal = ({ open, onClose, spot, photos, comments, onAddComment,
             setNewComment("");
         }
     };
-
+    const handleNavigateToMap = () => {
+        onClose();
+        navigate('/mapa', {
+            state: {
+                focusSpotId: spot.id,
+                focusLat: spot.latitude,
+                focusLng: spot.longitude
+            }
+        });
+    };
     if (!open) return null;
 
     const settings = {
@@ -174,7 +186,7 @@ export const SpotModal = ({ open, onClose, spot, photos, comments, onAddComment,
                             <h2 className="spot-title">{currentSpot.title}</h2>
                             {/* TODO odkomentować jak zmienią token na backendzie */}
                             {isOwner && (
-                                <EditSpotButton onClick={() => setShowEditModal(true)} />
+                                <EditSpotButton onClick={() => setShowEditModal(true)}/>
                             )}
                         </div>
                         <div className="section">
@@ -255,8 +267,19 @@ export const SpotModal = ({ open, onClose, spot, photos, comments, onAddComment,
                         </div>
                     </div>
 
-                    <div className="section google-btn-wrapper">
-                        <GoogleButton lat={spot.latitude} long={spot.longitude}/>
+                    <div className="section action-buttons-wrapper">
+
+
+                        {showMapButton && (
+                            <button className="app-map-btn" onClick={handleNavigateToMap}>
+                                <FaMapMarkedAlt style={{marginRight: '8px'}}/>
+                                Pokaż na mapie
+                            </button>
+                        )}
+
+                        <div className="google-btn-container">
+                            <GoogleButton lat={spot.latitude} long={spot.longitude}/>
+                        </div>
                     </div>
                 </div>
 
@@ -264,14 +287,14 @@ export const SpotModal = ({ open, onClose, spot, photos, comments, onAddComment,
             </div>
 
 
-                <AddPhotoModal
-                    open={showAddPhotoModal}
-                    onClose={() => setShowAddPhotoModal(false)}
-                    spotId={spot.id}
-                    onUploadSuccess={() => {
-                        handleRefreshPhotos();
-                    }}
-                />
+            <AddPhotoModal
+                open={showAddPhotoModal}
+                onClose={() => setShowAddPhotoModal(false)}
+                spotId={spot.id}
+                onUploadSuccess={() => {
+                    handleRefreshPhotos();
+                }}
+            />
 
             <EditSpotModal
                 open={showEditModal}

@@ -1,42 +1,42 @@
-.google-btn{
-    width: 70%;
-    height: 50px;
-    font-size: 14px;
-    background-color: #eaeaea;
+.google-btn {
+
+    width: auto;
+    padding: 0 25px;
+    height: 46px;
+
+    background-color: #f0f0f0;
+    color: #444;
+
     display: flex;
     border-radius: 50px;
-    justify-content: space-evenly;
+    justify-content: center;
     align-items: center;
-    border: none 0 white;
+    gap: 10px;
 
-
+    border: 1px solid #ddd;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transition: background 0.2s;
 }
 
-.btn-wrapper{
-    width: 90%;
-    display: flex;
-    justify-content: flex-end;
+.google-btn:hover {
+    background-color: #e4e4e4;
 }
 
-.maps-logo{
-    height: 30px;
+.btn-wrapper {
 
-
+    width: auto;
+    display: block;
 }
 
-.google-btn p{
+.maps-logo {
+    height: 24px;
+}
+
+.google-btn p {
     padding: 0;
     margin: 0;
 }
-
-.google-btn:hover{
-    background-color: #c7c7c7;
-    border: none 0 white;
-}
-
-.google-btn:focus,
-.google-btn:focus-visible {
-    outline: none;
-}
-
-
