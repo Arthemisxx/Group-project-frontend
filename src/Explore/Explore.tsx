@@ -5,8 +5,11 @@ import { SpotModal } from '../Spot/SpotModal';
 export const Explore = () => {
     const [photos, setPhotos] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [selectedPhoto, setSelectedPhoto] = useState<any>(null);
+    const [selectedSpot, setSelectedSpot] = useState<any>(null);
+    const [selectedSpotPhotos, setSelectedSpotPhotos] = useState<any[]>([]);
+    const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [comments, setComments] = useState<any[]>([]);
 
     useEffect(() => {
         fetch('http://localhost:8080/spots/map/search?minLat=-90&maxLat=90&minLng=-180&maxLng=180')
@@ -28,7 +31,6 @@ export const Explore = () => {
             })
             .then(photoArrays => {
                 const allPhotos = photoArrays.flat();
-                console.log(`Znaleziono ${allPhotos.length} zdjęć`);
                 setPhotos(allPhotos);
                 setLoading(false);
             })
@@ -38,16 +40,51 @@ export const Explore = () => {
             });
     }, []);
 
-    const handleCardClick = (photo: any) => {
-        setSelectedPhoto(photo);
-        setIsModalOpen(true);
-        document.body.style.overflow = 'hidden';
+    const handleCardClick = async (clickedPhoto: any) => {
+        const spot = clickedPhoto.spot;
+
+        // Pobierz wszystkie zdjęcia tego spota
+        try {
+            const photosResponse = await fetch(`http://localhost:8080/photos/spot/${spot.id}`);
+            const spotPhotos = await photosResponse.json();
+
+            // Znajdź indeks klikniętego zdjęcia
+            const photoIndex = spotPhotos.findIndex((p: any) => p.id === clickedPhoto.id);
+
+            // Pobierz komentarze spota
+            const commentsResponse = await fetch(`http://localhost:8080/comments/spot/${spot.id}`);
+            const spotComments = await commentsResponse.json();
+
+            setSelectedSpot(spot);
+            setSelectedSpotPhotos(spotPhotos);
+            setSelectedPhotoIndex(photoIndex >= 0 ? photoIndex : 0);
+            setComments(spotComments);
+            setIsModalOpen(true);
+            document.body.style.overflow = 'hidden';
+        } catch (error) {
+            console.error('Błąd pobierania danych:', error);
+        }
     };
 
     const handleCloseModal = () => {
         setIsModalOpen(false);
-        setSelectedPhoto(null);
+        setSelectedSpot(null);
+        setSelectedSpotPhotos([]);
+        setComments([]);
         document.body.style.overflow = 'auto';
+    };
+
+    const handleAddComment = (content: string) => {
+        // Tu możesz dodać logikę wysyłania komentarza do API
+        console.log('Nowy komentarz:', content);
+        // Tymczasowo dodaj do listy
+        const newComment = {
+            id: Date.now(),
+            content: content,
+            author: { displayName: "Ty" },
+            createdAt: new Date().toISOString()
+        };
+        setComments([...comments, newComment]);
     };
 
     const getRandomHeight = () => {
@@ -70,7 +107,7 @@ export const Explore = () => {
             <div className="explore-container">
                 <div className="explore-header">
                     <h2>Odkrywaj niesamowite miejsca</h2>
-                    <p>Brak zdjęć do wyświetlenia. Dodaj pierwsze!</p>
+                    <p>Brak zdjęć do wyświetlenia.</p>
                 </div>
             </div>
         );
@@ -80,6 +117,7 @@ export const Explore = () => {
         <section className="explore-container">
             <div className="explore-header">
                 <h2>Odkrywaj niesamowite miejsca</h2>
+                <p>Znaleziono {photos.length} zdjęć. Kliknij aby zobaczyć szczegóły.</p>
             </div>
 
             <div className="masonry-grid">
@@ -123,12 +161,15 @@ export const Explore = () => {
                 ))}
             </div>
 
-            {selectedPhoto && (
+            {selectedSpot && (
                 <SpotModal
                     open={isModalOpen}
                     onClose={handleCloseModal}
-                    photo={selectedPhoto}
-                    spot={selectedPhoto.spot}
+                    spot={selectedSpot}
+                    photos={selectedSpotPhotos}
+                    comments={comments}
+                    onAddComment={handleAddComment}
+                    initialPhotoIndex={selectedPhotoIndex}
                 />
             )}
         </section>

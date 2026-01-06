@@ -79,4 +79,41 @@ export const deletePhoto = async (id: number): Promise<void> => {
     await axiosClient.delete(`photos/${id}`);
 }
 
+export const saveSpotForLater = async (id: number) : Promise<void> => {
+    await axiosClient.post(`for-later/${id}`);
+}
+
+export const removeSpotForLater = async (id: number) : Promise<void> => {
+    await axiosClient.delete(`for-later/${id}`);
+}
+
+export const isSpotSavedForLater = async (id: number) : Promise<boolean> => {
+    const response = await axiosClient.get(`for-later/${id}`);
+    return response.data;
+}
+
+export const getSpotsSavedForLater = async () : Promise<Spot[]> => {
+    const response = await axiosClient.get(`for-later`);
+    return response.data;
+}
+
+export const getSpotLikesCount = async (id: number) : Promise<number> => {
+    const response = await axiosClient.get(`likes/spots/${id}`);
+    return response.data;
+}
+
+export const likeSpot = async (id: number) : Promise<void> => {
+    await axiosClient.post(`likes/spots/${id}`);
+}
+
+export const dislikeSpot = async (id: number) : Promise<void> => {
+    await axiosClient.delete(`likes/spots/${id}`);
+}
+
+export const isSpotLiked = async (id: number) : Promise<boolean> => {
+    const response = await axiosClient.get(`likes/spots/${id}/is-liked`);
+    return response.data;
+}
+
+
 

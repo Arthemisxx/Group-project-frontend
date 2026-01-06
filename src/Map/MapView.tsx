@@ -1,23 +1,34 @@
 import './MapView.css';
 import {Map} from "./components/Map.tsx"
 import {GoogleButton} from "./components/GoogleButton.tsx";
-import {useState} from "react";
+import {useState, useEffect} from "react";
+import {useSearchParams} from 'react-router-dom';
 import type {Spot, SpotCreate} from "../Utils/Spot.ts";
 import type {Photo} from "../Utils/Photo.ts";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-import {FaRegUser} from "react-icons/fa";
+import {FaHeart, FaPaperPlane, FaRegUser} from "react-icons/fa";
 import {SpotModal} from "../Spot/SpotModal.tsx";
 import type {Comment} from "../Utils/Comment.ts";
 import type {PostComment} from "../Utils/postComment.ts";
-import {insertComment, insertSpot, uploadSpotPhoto} from "../Utils/api.ts";
+import {
+    dislikeSpot,
+    getSpotLikesCount,
+    insertComment,
+    insertSpot, isSpotLiked,
+    isSpotSavedForLater, likeSpot,
+    removeSpotForLater,
+    saveSpotForLater,
+    uploadSpotPhoto
+} from "../Utils/api.ts";
 import {useAuth} from "../Auth/AuthProvider.tsx";
 import {CreateSpotButton} from "../Spot/CreateSpotButton.tsx";
 import {CreateSpotModal, type PhotoDraft} from "../Spot/CreateSpotModal.tsx";
 import {AddPhotoButton} from "../Spot/Photos/AddPhotoButton.tsx";
 import {AddPhotoModal} from "../Spot/Photos/AddPhotoModal.tsx";
 import {LoginButton} from "../Login/LoginButton.tsx";
+import {FaRegBookmark, FaBookmark, FaRegHeart} from "react-icons/fa6";
 
 export const MapView = () => {
     const [currentSpot, setCurrentSpot] = useState<Spot | null>(null)
@@ -29,11 +40,122 @@ export const MapView = () => {
     const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
     const [refreshSpots, setRefreshSpots] = useState<number>(0)
     const [mapTargetLocation, setMapTargetLocation] = useState<{ lat: number, lng: number } | null>(null);
+    const [newComment, setNewComment] = useState("");
+    const [isSaved, setIsSaved] = useState(false);
+    const [isLiked, setIsLiked] = useState(false);
+    const [likes, setLikes] = useState<number>(0);
 
     const {isAuthenticated} = useAuth();
 
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [newSpotLocation, setNewSpotLocation] = useState<{ lat: number, lng: number } | null>(null);
+
+    const [searchParams] = useSearchParams();
+    const [searchedLocation, setSearchedLocation] = useState<string>('');
+
+    const checkSavedAndLikedStatus = async () => {
+        if (currentSpot && isAuthenticated) {
+            try {
+                const saved = await isSpotSavedForLater(currentSpot.id);
+                const liked = await isSpotLiked(currentSpot.id);
+                const likes = await getSpotLikesCount(currentSpot.id);
+                setIsSaved(saved);
+                setIsLiked(liked);
+                setLikes(likes);
+            } catch (error) {
+                console.error("Błąd sprawdzania statusu zapisanego:", error);
+                setIsSaved(false);
+                setIsLiked(false);
+                setLikes(0);
+            }
+        } else {
+            setIsSaved(false);
+            setIsLiked(false);
+            setLikes(0);
+        }
+    };
+
+    useEffect(() => {
+               checkSavedAndLikedStatus();
+    }, [currentSpot, isAuthenticated]);
+
+    const handleToggleSave = async () => {
+         if (!currentSpot) return;
+
+        const previousState = isSaved;
+        setIsSaved(!isSaved);
+
+        try {
+            if (previousState) {
+                await removeSpotForLater(currentSpot.id);
+            } else {
+                await saveSpotForLater(currentSpot.id);
+            }
+        } catch (error) {
+            console.error("Błąd podczas zapisywania/usuwania:", error);
+            setIsSaved(previousState);
+            alert("Wystąpił błąd połączenia.");
+        }
+    };
+
+    const handleToggleLike = async () => {
+        if(!isAuthenticated){
+            alert("Zaloguj się aby polubić!");
+            return;
+        }
+
+        if (!currentSpot) return;
+
+        const previousState = isLiked;
+        setIsLiked(!isLiked);
+
+        try {
+            if (previousState) {
+                await dislikeSpot(currentSpot.id);
+            } else {
+                await likeSpot(currentSpot.id);
+            }
+        } catch (error) {
+            console.error("Wystąpił błąd:", error);
+            setIsLiked(previousState);
+            alert("Wystąpił błąd połączenia.");
+        }
+        const likes = await getSpotLikesCount(currentSpot.id);
+        setLikes(likes);
+
+    }
+
+    useEffect(() => {
+        const searchQuery = searchParams.get('search');
+        if (searchQuery) {
+            console.log('Przyszło wyszukiwanie:', searchQuery);
+            setSearchedLocation(searchQuery);
+            searchLocationOnMap(searchQuery);
+        }
+    }, [searchParams]);
+
+    const searchLocationOnMap = async (query: string) => {
+        try {
+            const response = await fetch(
+                `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`
+            );
+            const results = await response.json();
+
+            if (results && results.length > 0) {
+                const place = results[0];
+                const lat = parseFloat(place.lat);
+                const lng = parseFloat(place.lon);
+
+                console.log(`Znaleziono: ${place.display_name}`);
+                setMapTargetLocation({lat, lng});
+            } else {
+                alert(`Nie znaleziono miejsca: ${query}`);
+            }
+        } catch (error) {
+            console.error('Błąd wyszukiwania:', error);
+            alert('Wystąpił błąd podczas wyszukiwania');
+        }
+    };
 
 
     function handleSpotDataFromMap(spot: Spot | null) {
@@ -140,6 +262,13 @@ export const MapView = () => {
         }
     };
 
+    function handleSendComment() {
+        if (newComment.trim().length > 0) {
+            handleAddComment(newComment);
+            setNewComment("");
+        }
+    }
+
     return (
 
         <div className={"map-view-wrapper"}>
@@ -150,42 +279,43 @@ export const MapView = () => {
                         <div className={"photos-info-wrapper"}>
                             <div className={"slider-container"}>
                                 {currentSpotPhotos.length > 0 ? (
-                                    <>
-                                    {isAuthenticated && (
-                                        <div style={{
-                                            position: 'absolute',
-                                            top: '10px',
-                                            right: '10px',
-                                            zIndex: 10
-                                        }}>
-                                            <AddPhotoButton
-                                                onClick={() => setShowAddPhotoModal(true)}
-                                                className="mini-btn"
-                                            />
-                                        </div>
-                                    )}
-                                        <Slider {...sliderSettings}>
-                                            {currentSpotPhotos?.map((photo, index) => (
-                                                <div className={"current-photo-wrapper"}>
-                                                    <div className={"photo-wrapper"}>
-                                                        <img src={getPhotoUrl(photo.url)} alt="" className={"spot-photo"}
-                                                             onClick={() => {
-                                                                 // setSelectedPhoto(photo)
-                                                                 setSelectedPhotoIndex(index)
-                                                                 setShowModal(true)
-                                                             }}/>
-                                                        <div className={"photo-info-wrapper"}>
-                                                            <p className={"caption"}>{photo.caption}</p>
-                                                            {/*<p className={"author"}>{photo.author.displayName}</p>*/}
-                                                            <p className={"author"}><FaRegUser/> Julia Staniszewska</p>
+                                        <>
+                                            {isAuthenticated && (
+                                                <div style={{
+                                                    position: 'absolute',
+                                                    top: '10px',
+                                                    right: '10px',
+                                                    zIndex: 10
+                                                }}>
+                                                    <AddPhotoButton
+                                                        onClick={() => setShowAddPhotoModal(true)}
+                                                        className="mini-btn"
+                                                    />
+                                                </div>
+                                            )}
+                                            <Slider {...sliderSettings}>
+                                                {currentSpotPhotos?.map((photo, index) => (
+                                                    <div className={"current-photo-wrapper"}>
+                                                        <div className={"photo-wrapper"}>
+                                                            <img src={getPhotoUrl(photo.url)} alt=""
+                                                                 className={"spot-photo"}
+                                                                 onClick={() => {
+                                                                     // setSelectedPhoto(photo)
+                                                                     setSelectedPhotoIndex(index)
+                                                                     setShowModal(true)
+                                                                 }}/>
+                                                            <div className={"photo-info-wrapper"}>
+                                                                <p className={"caption"}>{photo.caption}</p>
+                                                                <p className={"author"}>
+                                                                    <FaRegUser/> {photo.author.displayName}</p>
+                                                            </div>
+
                                                         </div>
 
                                                     </div>
-
-                                                </div>
-                                            ))}
-                                        </Slider>
-                                    </>
+                                                ))}
+                                            </Slider>
+                                        </>
                                     ) :
                                     (
                                         <div className="no-photos">
@@ -200,7 +330,8 @@ export const MapView = () => {
                                                 ) :
                                                 (
                                                     <>
-                                                        <h2>Nikt jeszcze nie dodał zdjęcia</h2><p>Chcesz być pierwszy?</p>
+                                                        <h2>Nikt jeszcze nie dodał zdjęcia</h2><p>Chcesz być
+                                                        pierwszy?</p>
                                                         <LoginButton/>
                                                     </>
                                                 )}
@@ -211,11 +342,38 @@ export const MapView = () => {
                         </div>
 
                         <div className={"spot-info-wrapper"}>
-                            <p className={"spot-name"}
-                               onClick={() => {
-                                   setSelectedPhotoIndex(0)
-                                   setShowModal(true)
-                               }}>{currentSpot?.title}</p>
+                            <div className={"spot-info-inner-wrapper"}>
+                                <p className={"spot-name"}
+                                   onClick={() => {
+                                       setSelectedPhotoIndex(0)
+                                       setShowModal(true)
+                                   }}>{currentSpot?.title}</p>
+
+
+                                    <div style={{display: 'flex', alignItems: 'center'}}>
+                                        { isAuthenticated && (
+                                        <button
+                                            className={`spot-info-for-later ${isSaved ? "active" : ""}`}
+                                            onClick={handleToggleSave}
+                                            title={isSaved ? "Usuń z zapisanych" : "Zapisz na później"}
+                                        >
+                                            {isSaved ? <FaBookmark/> : <FaRegBookmark/>}
+                                        </button>
+                                        )}
+
+                                        <button
+                                            className={`spot-info-like ${isLiked ? "active" : ""}`}
+                                            onClick={handleToggleLike}
+                                            title={isLiked ? "Usuń z polubionych" : "Polub"}
+                                        >
+                                            <p style={{paddingRight: '10px'}}>{likes}</p>{isLiked ? <FaHeart/> : <FaRegHeart/>}
+                                        </button>
+                                    </div>
+
+
+
+                            </div>
+
                             <p className={"label"}>Opis</p>
                             <p className={"descr"}>{currentSpot?.description}</p>
                         </div>
@@ -238,6 +396,22 @@ export const MapView = () => {
                                     <p className="no-comments">Brak komentarzy</p>
                                 )}
                             </div>
+                            <div className="add-comment-wrapper">
+                            <textarea
+                                className="comment-input"
+                                placeholder="Dodaj komentarz..."
+                                value={newComment}
+                                onChange={(e) => setNewComment(e.target.value)}
+                                rows={2}
+                            />
+                                <button
+                                    className="send-comment-btn"
+                                    onClick={handleSendComment}
+                                    disabled={newComment.trim().length === 0}
+                                >
+                                    <FaPaperPlane/>
+                                </button>
+                            </div>
                         </div>
                         <div className="spot-google-btn-wrapper">
                             <GoogleButton lat={currentSpot?.latitude} long={currentSpot?.longitude}/>
@@ -252,7 +426,7 @@ export const MapView = () => {
                 <Map sendSpotDataToMapView={handleSpotDataFromMap} sendPhotosDataToMapView={handlePhotosDataFromMap}
                      sendCommentsDataToMapView={handleCommentsDataFromMap} refreshTrigger={refreshTrigger}
                      refreshSpots={refreshSpots}
-                     flyToLocation={mapTargetLocation}/>
+                     flyToLocation={mapTargetLocation} searchQuery={searchedLocation}/>
 
                 {isAuthenticated && (
                     <div style={{position: 'absolute', bottom: '30px', right: '30px', zIndex: 1000}}>
@@ -268,7 +442,10 @@ export const MapView = () => {
             {showModal && currentSpot && (
                 <SpotModal
                     open={showModal}
-                    onClose={() => setShowModal(false)}
+                    onClose={() => {
+                        setShowModal(false);
+                        checkSavedAndLikedStatus();
+                    }}
                     spot={currentSpot}
                     photos={currentSpotPhotos}
                     comments={currentSpotComments}
@@ -287,7 +464,11 @@ export const MapView = () => {
             {currentSpot && (
                 <AddPhotoModal
                     open={showAddPhotoModal}
-                    onClose={() => setShowAddPhotoModal(false)}
+                    onClose={() => {
+                        setShowAddPhotoModal(false);
+
+
+                    }}
                     spotId={currentSpot.id}
                     onUploadSuccess={() => {
                         setRefreshTrigger(prev => prev + 1);

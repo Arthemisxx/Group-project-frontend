@@ -4,10 +4,11 @@ import './User.css';
 import EditProfileModal, { type UserData } from './EditProfileModal';
 import { SpotModal } from '../Spot/SpotModal';
 import axiosClient from '../Auth/axiosClient';
-import { fetchSpotPhotos, fetchComments, insertComment } from '../Utils/api';
+import {fetchSpotPhotos, fetchComments, insertComment, getSpotsSavedForLater} from '../Utils/api';
 import type { Spot } from '../Utils/Spot';
 import type { Photo } from '../Utils/Photo';
 import type { Comment } from '../Utils/Comment';
+import { useAuth } from '../Auth/AuthProvider.tsx';  // <- DODAJ IMPORT
 
 interface FullUserProfile extends UserData {
     id: number;
@@ -24,7 +25,6 @@ interface SpotItem {
     img?: string;
 }
 
-
 interface PhotoItem {
     id: number;
     url?: string;
@@ -37,6 +37,7 @@ type TabType = 'spots' | 'photos' | 'saved';
 
 const User = () => {
     const navigate = useNavigate();
+    const { logout } = useAuth();  // <- DODAJ TO
 
     const [user, setUser] = useState<FullUserProfile | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
@@ -52,6 +53,8 @@ const User = () => {
     const [fullSpot, setFullSpot] = useState<Spot | null>(null);
     const [spotPhotos, setSpotPhotos] = useState<Photo[]>([]);
     const [spotComments, setSpotComments] = useState<Comment[]>([]);
+
+    const [refreshTrigger, setRefreshTrigger] = useState<number>(0)
 
     useEffect(() => {
         const fetchAllData = async () => {
@@ -74,7 +77,6 @@ const User = () => {
                     setUser(meData as FullUserProfile);
                 }
 
-
                 try {
                     const sR = await axiosClient.get('/users/me/spots');
                     const rawSpots = sR.data as SpotItem[];
@@ -93,30 +95,57 @@ const User = () => {
                     setSpots(spotsWithImages);
                 } catch (e) { console.error(e); }
 
-
                 try {
                     const pR = await axiosClient.get('/users/me/photos');
                     setPhotos(pR.data as PhotoItem[]);
                 } catch (e) { console.error(e); }
 
-
                 try {
-                    const svR = await axiosClient.get('/users/me/saved');
-                    const rawSaved = svR.data as SpotItem[];
+                    const savedSpotsData = await getSpotsSavedForLater();
+                    const savedWithImages = await Promise.all(savedSpotsData.map(async (spot: any) => {
+                        let imgUrl = undefined;
 
-                    const savedWithImages = await Promise.all(rawSaved.map(async (spot: SpotItem) => {
                         try {
                             const photos = await fetchSpotPhotos(spot.id);
                             if (photos && photos.length > 0) {
-                                return { ...spot, img: photos[0].url };
+                                imgUrl = photos[0].url;
                             }
-                        } catch {
-
+                        } catch (e) {
                         }
-                        return spot;
+
+                        return {
+                            id: spot.id,
+                            title: spot.title,
+                            img: imgUrl
+                        };
                     }));
+
                     setSaved(savedWithImages);
-                } catch (e) { console.error(e); }
+                } catch (e) {
+                    console.error("Błąd pobierania zapisanych spotów:", e);
+                    setSaved([]);
+                }
+
+                //
+                // try {
+                //     const svR = await axiosClient.get('/users/me/saved');
+                //     const rawSaved = svR.data as SpotItem[];
+                //
+                //     const savedWithImages = await Promise.all(rawSaved.map(async (spot: SpotItem) => {
+                //         try {
+                //             const photos = await fetchSpotPhotos(spot.id);
+                //             if (photos && photos.length > 0) {
+                //                 return { ...spot, img: photos[0].url };
+                //             }
+                //         } catch {
+                //
+                //         }
+                //         return spot;
+                //     }));
+                //     setSaved(savedWithImages);
+                // } catch (e) { console.error(e); }
+
+
 
             } catch (err: unknown) {
                 console.error(err);
@@ -133,11 +162,10 @@ const User = () => {
             }
         };
         fetchAllData();
-    }, [navigate]);
+    }, [navigate, refreshTrigger]);
 
     const handleUpdateProfile = async (updatedData: Partial<UserData>) => {
         try {
-
             const response = await axiosClient.put('/users/me', updatedData);
             setUser(prev => prev ? { ...prev, ...response.data } : null);
         } catch (err) {
@@ -180,6 +208,12 @@ const User = () => {
         }
     };
 
+    // <- DODAJ FUNKCJĘ WYLOGOWANIA
+    const handleLogout = () => {
+        logout();
+        navigate('/');
+    };
+
     const getAvatarSrc = (url: string | null | undefined) => {
         if (!url) return `https://ui-avatars.com/api/?name=${user?.email || 'User'}&background=random`;
         if (url.startsWith('/uploads')) return `http://localhost:8080${url}`;
@@ -200,7 +234,6 @@ const User = () => {
     const renderCard = (type: 'spot' | 'photo', item: CardItem) => {
         let imageUrl: string | undefined;
         let titleText: string = 'Photo';
-
 
         const BACKEND_URL = 'http://localhost:8080';
 
@@ -229,12 +262,11 @@ const User = () => {
                     if (type === 'spot') {
                         handleOpenSpot(item.id);
                     } else {
-                        // OBSŁUGA KLIKNIĘCIA W ZDJĘCIE
                         const photo = item as PhotoItem;
                         if (photo.spotId) {
                             handleOpenSpot(photo.spotId);
                         } else {
-                            console.warn("Brak spotId w zdjęciu (sprawdź backend PhotoService)");
+                            console.warn("Brak spotId w zdjęciu");
                         }
                     }
                 }}
@@ -319,6 +351,28 @@ const User = () => {
                         <button className="btn-primary-outline" onClick={() => setIsEditing(true)}>
                             Edytuj profil
                         </button>
+
+                        {/* <- DODAJ PRZYCISK WYLOGUJ */}
+                        <button
+                            className="btn-logout"
+                            onClick={handleLogout}
+                            style={{
+                                marginTop: '10px',
+                                width: '100%',
+                                padding: '10px',
+                                background: '#dc3545',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '8px',
+                                cursor: 'pointer',
+                                fontWeight: '600',
+                                transition: 'background 0.2s'
+                            }}
+                            onMouseOver={(e) => e.currentTarget.style.background = '#c82333'}
+                            onMouseOut={(e) => e.currentTarget.style.background = '#dc3545'}
+                        >
+                            Wyloguj się
+                        </button>
                     </div>
 
                     <div className="sidebar-card stats-card">
@@ -355,7 +409,10 @@ const User = () => {
             {isSpotModalOpen && fullSpot && (
                 <SpotModal
                     open={isSpotModalOpen}
-                    onClose={() => setSpotModalOpen(false)}
+                    onClose={() => {
+                        setSpotModalOpen(false)
+                        setRefreshTrigger(prev => prev + 1);
+                    }}
                     spot={fullSpot}
                     photos={spotPhotos}
                     comments={spotComments}

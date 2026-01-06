@@ -1,19 +1,12 @@
 // import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import "./Header.css";
 import {useAuth} from "../Auth/AuthProvider.tsx";
 import {FaUser} from "react-icons/fa";
 import {LoginButton} from "../Login/LoginButton.tsx";
 
 export default function Header() {
-    const navigate = useNavigate();
-    // const [isLoginOpen, setIsLoginOpen] = useState(false);
-    const { isAuthenticated, logout } = useAuth();
-
-    const handleLogout = () => {
-        logout();
-        navigate("/");
-    };
+    const { isAuthenticated } = useAuth();
 
     return (
         <>
@@ -32,28 +25,14 @@ export default function Header() {
 
                     <div className="actions">
                         {isAuthenticated ? (
-
-                            <div style={{display: "flex", alignItems: "center", gap: "10px"}}>
-
-                                <Link to="/uzytkownik">
-                                    <button className="btn-login">
-                                        <FaUser/>
-                                    </button>
-                                </Link>
-
-                                <button
-                                    className="btn-login"
-                                    onClick={handleLogout}
-                                    style={{fontSize: "0.8rem", padding: "0 15px"}}
-                                >
-                                    Wyloguj
+                            <Link to="/uzytkownik">
+                                <button className="btn-login">
+                                    <FaUser/>
                                 </button>
-                            </div>
-
+                            </Link>
                         ) : (
                             <LoginButton/>
                         )}
-
                     </div>
                 </div>
             </div>

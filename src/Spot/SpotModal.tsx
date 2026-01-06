@@ -11,11 +11,19 @@ import {FaChevronLeft, FaChevronRight, FaPaperPlane, FaUserCircle, FaMapMarkedAl
 import type {Comment} from "../Utils/Comment.ts";
 import {AddPhotoButton} from "./Photos/AddPhotoButton.tsx";
 import {AddPhotoModal} from "./Photos/AddPhotoModal.tsx";
-import {fetchSpotPhotos} from "../Utils/api.ts";
+import {
+    dislikeSpot,
+    fetchSpotPhotos, getSpotLikesCount, isSpotLiked,
+    isSpotSavedForLater,
+    likeSpot,
+    removeSpotForLater,
+    saveSpotForLater
+} from "../Utils/api.ts";
 import {EditSpotButton} from "./EditSpotButton.tsx";
 import {EditSpotModal} from "./EditSpotModal.tsx";
 import {useAuth} from "../Auth/AuthProvider.tsx";
 import { jwtDecode } from "jwt-decode";
+import {FaBookmark, FaRegBookmark, FaRegHeart} from "react-icons/fa6";
 
 interface ModalProps {
     onClose: () => void;
@@ -67,6 +75,10 @@ export const SpotModal = ({ open, onClose, spot, photos, comments, onAddComment,
     const [currentSpot, setCurrentSpot] = useState(spot);
     const {token} = useAuth();
     const [isOwner, setIsOwner] = useState(false);
+    const [isSaved, setIsSaved] = useState(false);
+    const [isLiked, setIsLiked] = useState(false);
+    const [likes, setLikes] = useState<number>(0);
+    const {isAuthenticated} = useAuth();
 
     useEffect(() => {
         if (open) {
@@ -95,8 +107,31 @@ export const SpotModal = ({ open, onClose, spot, photos, comments, onAddComment,
             } else {
                 setIsOwner(false);
             }
+
+            const checkSavedStatus = async () => {
+                    try {
+                        const saved = await isSpotSavedForLater(spot.id);
+                        setIsSaved(saved);
+                        const liked = await isSpotLiked(currentSpot.id);
+                        setIsLiked(liked);
+                        const likes = await getSpotLikesCount(currentSpot.id);
+                        setLikes(likes);
+                        setLikes(likes);
+
+
+                    } catch (error) {
+                        console.error("Błąd sprawdzania statusu zapisanego:", error);
+                        setIsSaved(false);
+                        setIsLiked(false);
+
+                    }
+
+            };
+            checkSavedStatus();
         }
     }, [photos, open, initialPhotoIndex, spot, token]);
+
+
 
     const handleRefreshPhotos = async () => {
         try {
@@ -184,7 +219,6 @@ export const SpotModal = ({ open, onClose, spot, photos, comments, onAddComment,
                             gap: '10px'
                         }}>
                             <h2 className="spot-title">{currentSpot.title}</h2>
-                            {/* TODO odkomentować jak zmienią token na backendzie */}
                             {isOwner && (
                                 <EditSpotButton onClick={() => setShowEditModal(true)}/>
                             )}
@@ -192,6 +226,29 @@ export const SpotModal = ({ open, onClose, spot, photos, comments, onAddComment,
                         <div className="section">
                             <p className="label">O miejscu</p>
                             <p className="spot-description">{currentSpot.description}</p>
+
+                                <div className="modal-actions-row">
+                                    {isAuthenticated && (
+                                    <button
+                                        className={`action-btn save-btn ${isSaved ? 'active' : ''}`}
+                                        onClick={handleToggleSave}
+                                        title={isSaved ? "Usuń z zapisanych" : "Zapisz na później"}
+                                    >
+                                        {isSaved ? <FaBookmark/> : <FaRegBookmark/>}
+                                    </button>
+                                    )}
+
+                                    <button
+                                        className={`action-btn like-btn ${isLiked ? 'active' : ''}`}
+                                        onClick={handleToggleLike}
+                                        title={isLiked ? "Usuń z polubionych" : "Polub"}
+                                    >
+                                        <p style={{paddingRight: '10px'}}>{likes}</p>{isLiked ? <FaHeart/> :
+                                        <FaRegHeart/>}
+                                    </button>
+                                </div>
+
+
                         </div>
                     </div>
 
@@ -248,8 +305,8 @@ export const SpotModal = ({ open, onClose, spot, photos, comments, onAddComment,
                                 <p className="no-comments-text">Bądź pierwszy i skomentuj to miejsce!</p>
                             )}
                         </div>
-
-                        <div className="add-comment-wrapper">
+                        {isAuthenticated && (
+                            <div className="add-comment-wrapper">
                             <textarea
                                 className="comment-input"
                                 placeholder="Dodaj komentarz..."
@@ -257,14 +314,17 @@ export const SpotModal = ({ open, onClose, spot, photos, comments, onAddComment,
                                 onChange={(e) => setNewComment(e.target.value)}
                                 rows={2}
                             />
-                            <button
-                                className="send-comment-btn"
-                                onClick={handleSendComment}
-                                disabled={newComment.trim().length === 0}
-                            >
-                                <FaPaperPlane/>
-                            </button>
-                        </div>
+                                <button
+                                    className="send-comment-btn"
+                                    onClick={handleSendComment}
+                                    disabled={newComment.trim().length === 0}
+                                >
+                                    <FaPaperPlane/>
+                                </button>
+                            </div>
+                        )}
+
+
                     </div>
 
                     <div className="section action-buttons-wrapper">

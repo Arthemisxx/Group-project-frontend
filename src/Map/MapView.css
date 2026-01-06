@@ -165,6 +165,58 @@
     margin-top: 10px;
 }
 
+.spot-info-inner-wrapper{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+
+}
+
+
+.spot-info-for-later,
+.spot-info-like {
+    background: transparent;
+    border: none;
+    outline: none;
+    box-shadow: none;
+    cursor: pointer;
+    font-size: 24px;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #333;
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.spot-info-for-later {
+    margin-left: 15px;
+}
+
+.spot-info-like {
+    margin-left: 5px;
+}
+
+.spot-info-for-later:focus,
+.spot-info-for-later:active,
+.spot-info-like:focus,
+.spot-info-like:active {
+    outline: none !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.spot-info-for-later::-moz-focus-inner,
+.spot-info-like::-moz-focus-inner {
+    border: 0;
+}
+
+.spot-info-for-later:hover,
+.spot-info-like:hover {
+    transform: scale(1.1);
+    color: #000;
+}
+
 .spot-name {
     font-size: 22px;
     padding-top: 0;
