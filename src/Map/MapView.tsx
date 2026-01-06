@@ -1,7 +1,8 @@
 import './MapView.css';
 import {Map} from "./components/Map.tsx"
 import {GoogleButton} from "./components/GoogleButton.tsx";
-import {useEffect, useState} from "react";
+import {useState, useEffect} from "react";
+import {useSearchParams} from 'react-router-dom';
 import type {Spot, SpotCreate} from "../Utils/Spot.ts";
 import type {Photo} from "../Utils/Photo.ts";
 import Slider from "react-slick";
@@ -45,6 +46,11 @@ export const MapView = () => {
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [newSpotLocation, setNewSpotLocation] = useState<{ lat: number, lng: number } | null>(null);
 
+    // NOWE - obsługa wyszukiwania z URL
+    const [searchParams] = useSearchParams();
+    const [searchedLocation, setSearchedLocation] = useState<string>('');
+
+    // Odbierz parametr search z URL
     useEffect(() => {
         const checkSavedStatus = async () => {
             if (currentSpot && isAuthenticated) {
@@ -89,6 +95,40 @@ export const MapView = () => {
             // Cofamy zmianę w razie błędu
             setIsSaved(previousState);
             alert("Wystąpił błąd połączenia.");
+        }
+    };
+
+    // Odbierz parametr search z URL
+    useEffect(() => {
+        const searchQuery = searchParams.get('search');
+        if (searchQuery) {
+            console.log('Przyszło wyszukiwanie:', searchQuery);
+            setSearchedLocation(searchQuery);
+            searchLocationOnMap(searchQuery);
+        }
+    }, [searchParams]);
+
+    // Funkcja wyszukująca miejsce
+    const searchLocationOnMap = async (query: string) => {
+        try {
+            const response = await fetch(
+                `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`
+            );
+            const results = await response.json();
+
+            if (results && results.length > 0) {
+                const place = results[0];
+                const lat = parseFloat(place.lat);
+                const lng = parseFloat(place.lon);
+
+                console.log(`Znaleziono: ${place.display_name}`);
+                setMapTargetLocation({ lat, lng });
+            } else {
+                alert(`Nie znaleziono miejsca: ${query}`);
+            }
+        } catch (error) {
+            console.error('Błąd wyszukiwania:', error);
+            alert('Wystąpił błąd podczas wyszukiwania');
         }
     };
 
@@ -347,7 +387,7 @@ export const MapView = () => {
                 <Map sendSpotDataToMapView={handleSpotDataFromMap} sendPhotosDataToMapView={handlePhotosDataFromMap}
                      sendCommentsDataToMapView={handleCommentsDataFromMap} refreshTrigger={refreshTrigger}
                      refreshSpots={refreshSpots}
-                     flyToLocation={mapTargetLocation}/>
+                     flyToLocation={mapTargetLocation} searchQuery={searchedLocation}/>
 
                 {isAuthenticated && (
                     <div style={{position: 'absolute', bottom: '30px', right: '30px', zIndex: 1000}}>
