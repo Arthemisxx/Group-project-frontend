@@ -1,0 +1,45 @@
+.tag-gallery-container {
+    padding: 40px 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.tag-gallery-header {
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+/* Naprawa wielkości zdjęć - Julia chciała, żeby mieściły się na ekranie */
+.tag-photos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); /* Układ wielokolumnowy */
+    gap: 25px;
+}
+
+.gallery-img {
+    width: 100%;
+    max-height: 60vh; /* Zdjęcie nie zajmie więcej niż 60% wysokości ekranu */
+    object-fit: cover;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.gallery-img:hover {
+    transform: scale(1.02);
+}
+
+.empty-gallery {
+    text-align: center;
+    margin-top: 100px;
+}
+
+.back-btn {
+    padding: 10px 20px;
+    background-color: #2ecc71;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-top: 20px;
+}

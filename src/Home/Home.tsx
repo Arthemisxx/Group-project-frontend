@@ -26,7 +26,7 @@ export default function Home() {
                 return { name: tag, imageUrl };
             }));
             
-            setTagData(data);
+            setTagData(data.filter(tag => tag.imageUrl !== ""));
         };
 
         loadTagsWithPhotos();
