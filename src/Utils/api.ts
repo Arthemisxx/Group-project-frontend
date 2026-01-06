@@ -92,3 +92,23 @@ export const isSpotSavedForLater = async (id: number) : Promise<boolean> => {
     return response.data;
 }
 
+export const getSpotLikesCount = async (id: number) : Promise<number> => {
+    const response = await axiosClient.get(`likes/spots/${id}`);
+    return response.data;
+}
+
+export const likeSpot = async (id: number) : Promise<void> => {
+    await axiosClient.post(`likes/spots/${id}`);
+}
+
+export const dislikeSpot = async (id: number) : Promise<void> => {
+    await axiosClient.delete(`likes/spots/${id}`);
+}
+
+export const isSpotLiked = async (id: number) : Promise<boolean> => {
+    const response = await axiosClient.get(`likes/spots/${id}/is-liked`);
+    return response.data;
+}
+
+
+
