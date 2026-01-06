@@ -47,7 +47,7 @@ export default function Home() {
                                 backgroundSize: 'cover',
                                 backgroundPosition: 'center'
                             }}
-                            onClick={() => navigate(`/odkrywaj?tag=${tag.name}`)}
+                            onClick={() => navigate(`/odkrywaj/${tag.name}`)}
                         >
                             <div className="category-overlay">
                                 <h3>{tag.name}</h3>
