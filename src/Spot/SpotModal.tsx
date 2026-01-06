@@ -7,7 +7,7 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import {FaChevronLeft, FaChevronRight, FaPaperPlane, FaUserCircle, FaMapMarkedAlt} from "react-icons/fa";
+import {FaChevronLeft, FaChevronRight, FaPaperPlane, FaUserCircle, FaMapMarkedAlt, FaHeart} from "react-icons/fa";
 import type {Comment} from "../Utils/Comment.ts";
 import {AddPhotoButton} from "./Photos/AddPhotoButton.tsx";
 import {AddPhotoModal} from "./Photos/AddPhotoModal.tsx";
@@ -150,6 +150,50 @@ export const SpotModal = ({ open, onClose, spot, photos, comments, onAddComment,
             setNewComment("");
         }
     };
+
+    const handleToggleSave = async () => {
+
+        const previousState = isSaved;
+        setIsSaved(!isSaved);
+
+        try {
+            if (previousState) {
+                await removeSpotForLater(currentSpot.id);
+            } else {
+                await saveSpotForLater(currentSpot.id);
+            }
+        } catch (error) {
+            console.error("Błąd zapisu:", error);
+            setIsSaved(previousState);
+            alert("Nie udało się zmienić statusu.");
+        }
+    };
+
+    const handleToggleLike = async () => {
+        if( !isAuthenticated ){
+            alert("Zaloguj się aby polubić!");
+            return;
+        }
+
+        const previousState = isLiked;
+        setIsLiked(!isLiked);
+
+        try {
+            if (previousState) {
+                await dislikeSpot(currentSpot.id);
+            } else {
+                await likeSpot(currentSpot.id);
+            }
+        } catch (error) {
+            console.error("Błąd zapisu:", error);
+            setIsLiked(previousState);
+            alert("Nie udało się polubić.");
+        }
+
+        const likes = await getSpotLikesCount(currentSpot.id);
+        setLikes(likes);
+    };
+
     const handleNavigateToMap = () => {
         onClose();
         navigate('/mapa', {
