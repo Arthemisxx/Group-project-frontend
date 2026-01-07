@@ -280,9 +280,7 @@ const User = () => {
                             <span className="placeholder-badge">{type === 'spot' ? 'SPOT' : 'FOTO'}</span>
                         </div>
                     )}
-                    {type === 'photo' && hasImage && (
-                        <div className="photo-overlay"><span>❤️ {(item as PhotoItem).likes || 0}</span></div>
-                    )}
+
                 </div>
                 {type === 'spot' && (
                     <div className="card-details-row">
