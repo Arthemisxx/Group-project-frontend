@@ -58,21 +58,25 @@ export const MapView = () => {
             try {
                 const saved = await isSpotSavedForLater(currentSpot.id);
                 const liked = await isSpotLiked(currentSpot.id);
-                const likes = await getSpotLikesCount(currentSpot.id);
+
                 setIsSaved(saved);
                 setIsLiked(liked);
-                setLikes(likes);
+
             } catch (error) {
                 console.error("Błąd sprawdzania statusu zapisanego:", error);
                 setIsSaved(false);
                 setIsLiked(false);
-                setLikes(0);
             }
         } else {
             setIsSaved(false);
             setIsLiked(false);
-            setLikes(0);
         }
+
+        if(currentSpot){
+            const likes = await getSpotLikesCount(currentSpot.id);
+            setLikes(likes);
+        }
+
     };
 
     useEffect(() => {
@@ -99,12 +103,14 @@ export const MapView = () => {
     };
 
     const handleToggleLike = async () => {
+        if (!currentSpot) return;
+
         if(!isAuthenticated){
+            const likes = await getSpotLikesCount(currentSpot.id);
+            setLikes(likes);
             alert("Zaloguj się aby polubić!");
             return;
         }
-
-        if (!currentSpot) return;
 
         const previousState = isLiked;
         setIsLiked(!isLiked);
@@ -396,7 +402,8 @@ export const MapView = () => {
                                     <p className="no-comments">Brak komentarzy</p>
                                 )}
                             </div>
-                            <div className="add-comment-wrapper">
+                            {isAuthenticated && (
+                                <div className="add-comment-wrapper">
                             <textarea
                                 className="comment-input"
                                 placeholder="Dodaj komentarz..."
@@ -404,14 +411,16 @@ export const MapView = () => {
                                 onChange={(e) => setNewComment(e.target.value)}
                                 rows={2}
                             />
-                                <button
-                                    className="send-comment-btn"
-                                    onClick={handleSendComment}
-                                    disabled={newComment.trim().length === 0}
-                                >
-                                    <FaPaperPlane/>
-                                </button>
-                            </div>
+                                    <button
+                                        className="send-comment-btn"
+                                        onClick={handleSendComment}
+                                        disabled={newComment.trim().length === 0}
+                                    >
+                                        <FaPaperPlane/>
+                                    </button>
+                                </div>
+                            )}
+
                         </div>
                         <div className="spot-google-btn-wrapper">
                             <GoogleButton lat={currentSpot?.latitude} long={currentSpot?.longitude}/>
