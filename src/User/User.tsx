@@ -23,6 +23,8 @@ interface SpotItem {
     id: number;
     title: string;
     img?: string;
+    latitude: number;
+    longitude: number;
 }
 
 interface PhotoItem {
@@ -81,18 +83,23 @@ const User = () => {
                     const sR = await axiosClient.get('/users/me/spots');
                     const rawSpots = sR.data as SpotItem[];
 
-                    const spotsWithImages = await Promise.all(rawSpots.map(async (spot: SpotItem) => {
+                    const spotsWithFullData = await Promise.all(rawSpots.map(async (simpleSpot: SpotItem) => {
+                        let fullData = simpleSpot;
                         try {
-                            const photos = await fetchSpotPhotos(spot.id);
-                            if (photos && photos.length > 0) {
-                                return { ...spot, img: photos[0].url };
-                            }
-                        } catch {
+                            const detailRes = await axiosClient.get(`/spots/${simpleSpot.id}`);
+                            fullData = detailRes.data;
+                        } catch (err) { }
 
-                        }
-                        return spot;
+                        let imgUrl = undefined;
+                        try {
+                            const photos = await fetchSpotPhotos(simpleSpot.id);
+                            if (photos && photos.length > 0) imgUrl = photos[0].url;
+                        } catch { }
+
+                        return { ...fullData, img: imgUrl };
                     }));
-                    setSpots(spotsWithImages);
+
+                    setSpots(spotsWithFullData);
                 } catch (e) { console.error(e); }
 
                 try {
@@ -290,7 +297,15 @@ const User = () => {
                             title="Pokaż na mapie"
                             onClick={(e) => {
                                 e.stopPropagation();
-                                navigate('/mapa', { state: { focusSpotId: item.id } });
+                                const spot = item as SpotItem;
+
+                                navigate('/mapa', {
+                                    state: {
+                                        focusSpotId: spot.id,
+                                        focusLat: spot.latitude,
+                                        focusLng: spot.longitude
+                                    }
+                                });
                             }}
                         >
                             📍
