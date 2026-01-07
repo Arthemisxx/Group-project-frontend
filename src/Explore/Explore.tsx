@@ -170,6 +170,7 @@ export const Explore = () => {
                     comments={comments}
                     onAddComment={handleAddComment}
                     initialPhotoIndex={selectedPhotoIndex}
+                    showMapButton={true}
                 />
             )}
         </section>
