@@ -87,12 +87,12 @@ export const AddPhotoModal = ({ open, onClose, spotId, onUploadSuccess }: AddPho
 
         setIsUploading(true);
         try {
-            await Promise.all(photos.map(photo =>
-                uploadSpotPhoto(spotId, {
+            for (const photo of photos) {
+                await uploadSpotPhoto(spotId, {
                     file: photo.file,
                     caption: photo.caption
-                })
-            ));
+                });
+            }
 
             onUploadSuccess();
             onClose();
