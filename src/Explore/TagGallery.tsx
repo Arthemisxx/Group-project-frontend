@@ -66,9 +66,6 @@ export const TagGallery = () => {
                 {photos.map((photo, index) => (
                     <div key={index} className="tag-photo-card" onClick={() => handlePhotoClick(photo)}>
                         <img src={photo.url} alt={photo.spot.title} className="gallery-img" />
-                        <div className="photo-info">
-                            <h3>{photo.spot.title}</h3>
-                        </div>
                     </div>
                 ))}
             </div>
